@@ -57,6 +57,7 @@ public:
 	virtual float GetHeight(void) { return 0.0f; }
 	virtual float GetWidth(void) { return 0.0f; }
 	virtual void SetLife(int nLife) { };
+	virtual int GetLife() { return 0; }
 	virtual D3DXMATRIX GetMatrix(void) {D3DXMATRIX mtx;  D3DXMatrixIdentity(&mtx); return mtx;}
 	//int GetID(void) { return m_nID; }
 	

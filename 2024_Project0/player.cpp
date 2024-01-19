@@ -345,7 +345,7 @@ void CPlayer::Attack1()
 	if (m_bKey)
 	{
 		m_bKey = false;
-		SetMove(GetMove() + AnglesToVector(GetRot()) * -10.0f);
+		SetMove(GetMove() + AnglesToVector(GetRot()) * -7.0f);
 	}
 	
 }
@@ -388,7 +388,7 @@ void CPlayer::Attack2()
 	if (m_bKey)
 	{
 		m_bKey = false;
-		SetMove(GetMove() + AnglesToVector(GetRot()) * -5.0f);
+		SetMove(GetMove() + AnglesToVector(GetRot()) * -7.0f);
 	}
 }
 void CPlayer::Attack3()

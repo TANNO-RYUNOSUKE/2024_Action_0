@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="billboard.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="Collision.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="DepthShadow.cpp" />
     <ClCompile Include="enemy.cpp" />

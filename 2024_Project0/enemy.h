@@ -11,7 +11,7 @@
 
 #include "motion.h"
 #include "orbit.h"
-
+#include "collision.h"
 
 
 //クラス定義
@@ -46,7 +46,7 @@ public:
 
 	
 	void AddLife(int nAdd) { m_nLife += nAdd; }//ライフに加算
-	
+	void Damage(int nDamage, D3DXVECTOR3 knockback) { m_nLife -= nDamage, SetMove(GetMove() + knockback); }
 	
 protected:
 	D3DXVECTOR3 posOld;
@@ -61,7 +61,7 @@ protected:
 private:
 	
 };
-//エネミー(歩行戦車)
+//エネミー(テスト)
 class CEnemy_TEST : public CEnemy
 {
 public:
@@ -74,7 +74,7 @@ public:
 	void Draw(void);
 	static CEnemy_TEST * Create(D3DXVECTOR3 pos, int nLife);
 private:
-
+	CSphereCollision * m_pCollision;
 };
 
 

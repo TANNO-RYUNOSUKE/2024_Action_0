@@ -365,10 +365,13 @@ void CAfterImage::Draw(void)
 		
 		pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
 		D3DCOLORVALUE Color = pMat[nCntMat].MatD3D.Diffuse;
+		D3DCOLORVALUE Emissive = pMat[nCntMat].MatD3D.Emissive;
 		//ƒ}ƒeƒŠƒAƒ‹‚ÌÝ’è
 		if (m_Col.a > 0.0f)
 		{
 			pMat[nCntMat].MatD3D.Diffuse = m_Col;
+			pMat[nCntMat].MatD3D.Emissive = m_Col * 0.5f;
+
 			pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
 			m_Col.a -= m_Col.a / m_nLife;
 		}
@@ -395,6 +398,7 @@ void CAfterImage::Draw(void)
 		
 		//m_pMesh->DrawSubset(nCntMat);
 		
+			pMat[nCntMat].MatD3D.Emissive = Emissive;
 			pMat[nCntMat].MatD3D.Diffuse = Color;
 			pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
 		

@@ -1,5 +1,7 @@
 #include "collision.h"
 #include "manager.h"
+#include "animbillboard.h"
+#include "sound.h"
 Clist<CSphereCollision *> CSphereCollision::List = {};
 CSphereCollision::CSphereCollision()
 {
@@ -40,7 +42,11 @@ void CSphereCollision::Collision()
 			{	
 				if (CManager::GetInstance()->GetDistance(pCollision->m_Pos - m_Pos) <= (m_fRadius + pCollision->m_fRadius))
 				{
-					pCollision->m_pParent->Damage(m_nPower, m_knockback);
+					if (pCollision->m_pParent->Damage(m_nPower, m_knockback))
+					{
+						CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHHIT);
+						CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false, (pCollision->m_Pos + m_Pos)*0.5f + m_knockback, "data\\TEXTURE\\HitEffect.png");
+					}
 				}
 			}
 		}

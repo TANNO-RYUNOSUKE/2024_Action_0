@@ -151,7 +151,7 @@ void CBillboard::Draw(void)
 	pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 	pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
 	pDevice->SetRenderState(D3DRS_ALPHAREF, 0);
-	pDevice->SetRenderState(D3DRS_FOGENABLE, FALSE); //フォグの無効化
+
 
 	//Zテストを無効化
 	pDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
@@ -205,11 +205,11 @@ void CBillboard::Draw(void)
 	pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
 	pDevice->SetRenderState(D3DRS_ALPHAREF, 80);
 
-	pDevice->SetRenderState(D3DRS_FOGENABLE, TRUE); //フォグの有効化
 	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
 }
 void CBillboard::SetVtx()
 {
+
 	CRenderer * pRenderer = CManager::GetInstance()->GetRenderer();
 	LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
 	pDevice = pRenderer->GetDevice();
@@ -235,10 +235,10 @@ void CBillboard::SetVtx()
 	pVtx[3].tex = D3DXVECTOR2(1.0f, 1.0f);
 
 	//頂点カラーの設定
-	pVtx[0].col = m_Cclor;
-	pVtx[1].col = m_Cclor;
-	pVtx[2].col = m_Cclor;
-	pVtx[3].col = m_Cclor;
+	pVtx[0].col = GetColor();
+	pVtx[1].col = GetColor();
+	pVtx[2].col = GetColor();
+	pVtx[3].col = GetColor();
 
 	m_pVtxBuff->Unlock();
 }

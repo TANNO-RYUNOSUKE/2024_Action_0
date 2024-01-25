@@ -12,7 +12,7 @@ class CAnimBillboard : public CBillboard //オブジェクトクラスの継承
 {
 public:
 
-	CAnimBillboard(int nPriority = 1);
+	CAnimBillboard(int nPriority = 6);
 
 	~CAnimBillboard();
 
@@ -20,14 +20,17 @@ public:
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-
+	void SetAnim(void);
 	static CAnimBillboard * Create(float fHeight, float fWidth, int nH_Key, int nW_Key, int nNumKey, int nFlame, bool bLoop, D3DXVECTOR3 pos, char * pName = NULL);
 
 private:
 	int m_nH_Key;
 	int m_nW_Key;
-	int m_nFlame;
+	
 	int m_nNumKey;
+	int m_nCurrentKey;
+	float m_fFlameCount;
+	int m_nFlameRate;
 	bool m_bLoop;
 };
 

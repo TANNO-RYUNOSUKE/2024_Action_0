@@ -22,7 +22,7 @@
 #include "meshfield.h"
 #include "collision.h"
 #include "list.h"
-
+#include "texture.h"
 CFade * CScene::m_pFade = NULL;
 //=============================================
 //コンストラクタ
@@ -205,6 +205,7 @@ HRESULT CGame::Init()
 	m_pLight = DBG_NEW CLight;
 	m_pMeshfield = CMeshfield::Create(100.0f, 100.0f, 70, 70);
 	m_pPlayer = CPlayer::Create();
+	CTexture * pTex = CManager::GetInstance()->GetTexture();
 	//初期化設定;
 	
 	if (FAILED(m_pCamera->Init()))
@@ -216,8 +217,9 @@ HRESULT CGame::Init()
 		return -1;
 	};
 
-	
-	CEnemy_TEST::Create(VECTO3ZERO, 10);
+	pTex->Regist("data\\TEXTURE\\spelhit.png");
+	pTex->Regist("data\\TEXTURE\\HitEffect.png");
+	CEnemy_TEST::Create(VECTO3ZERO, 100);
 
 	CSound * pSound = CManager::GetInstance()->GetSound();
 	pSound->Play(CSound::SOUND_LABEL_BGM_ZONE);

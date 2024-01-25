@@ -13,7 +13,7 @@
 #include "collision.h"
 #include <vector>
 //マクロ定義
-#define GRAVITY (0.4f)
+#define GRAVITY (0.8f)
 #define WALK_SPEED (0.18f)
 #define ENERGY_MAX (3.0f)
 //クラス定義

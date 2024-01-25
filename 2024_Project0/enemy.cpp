@@ -11,6 +11,9 @@
 #include "list.h"
 #include "scene.h"
 #include "meshfield.h"
+#include "player.h"
+#include "animbillboard.h"
+#include "sound.h"
 //=============================================
 //コンストラクタ
 //=============================================
@@ -78,14 +81,30 @@ void CEnemy::Update()
 	SetPos(GetPos() + GetMove());
 	SetMove(GetMove()*0.9f);
 	m_nStateCount--;
+	D3DXVECTOR3 pos = GetPos();
+	if (m_state == STATE_DEAD && m_nStateCount % 4 == 0)
+	{
+		float fSize = (rand() % 1000) * 0.1f;
+	
+		pos.x += (rand() % 500 - 250) *0.1f;
+		pos.z += (rand() % 500 - 250) *0.1f;
+		pos.y += (rand() % 1000) *0.1f;
+		CAnimBillboard::Create(fSize, fSize, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
+	}
 	if (m_nStateCount <= 0)
 	{
+	
 		switch (m_state)
 		{
 		case CEnemy::STATE_DAMAGE:
 			m_state = STATE_NONE;
 			break;
 		case CEnemy::STATE_DEAD:
+			pos = GetPos();
+			pos.y += 50.0f;
+ 			CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
+			Release();
 			break;
 		default:
 			m_nStateCount = 0;
@@ -154,7 +173,14 @@ bool CEnemy::Damage(int nDamage, D3DXVECTOR3 knockback)
 	{
 		m_nLife -= nDamage;
 		SetMove(GetMove() + knockback);
-		SetState(STATE_DAMAGE, 15);
+		if (m_nLife <= 0)
+		{
+			SetState(STATE_DEAD, 120);
+		}
+		else
+		{
+			SetState(STATE_DAMAGE, 15);
+		}
 		return true;
 	}
 	return false;
@@ -215,7 +241,7 @@ void CEnemy_TEST::Update()
 		}
 		else
 		{
-			move.y -= 0.4f;
+			move.y -= GRAVITY;
 		}
 		SetMove(move);
 	}

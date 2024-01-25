@@ -35,6 +35,7 @@ public:
 	LPDIRECT3DVERTEXBUFFER9 * GetBuff() { return &m_pVtxBuff; }
 	D3DXMATRIX GetMatrix(void) { return m_mtxWorld; }
 	void SetColor(D3DXCOLOR col) { m_Cclor = col; }
+	D3DXCOLOR GetColor() { return m_Cclor; }
 protected:
 	//ƒ|ƒŠƒSƒ“•\Ž¦—p
 	

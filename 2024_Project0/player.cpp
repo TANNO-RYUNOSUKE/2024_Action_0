@@ -333,8 +333,8 @@ void CPlayer::Walk()
 void CPlayer::Attack1()
 {
 	m_nDamage = 5;
-	m_fPower = 10.0f;
-	m_Size = 3.0f;
+	m_fPower = 7.0f;
+	m_Size = 2.0f;
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
@@ -382,7 +382,7 @@ void CPlayer::Attack1()
 void CPlayer::Attack2()
 {
 	m_nDamage = 8;
-	m_fPower = 10.0f;
+	m_fPower = 7.0f;
 	m_Size = 1.2f;
 	if (m_pMotion->GetKey() == 2)
 	{
@@ -527,6 +527,7 @@ void CPlayer::AutoCollisionCreate()
 		D3DXVECTOR3 posold = m_pOrbit->GetPosOld();
 		D3DXVECTOR3 pos = m_pOrbit->GetPos();
 		D3DXVECTOR3 Vec = -AnglesToVector(GetRot()) *m_fPower;
+		Vec.y += 10.0f;
 		float Radius = CManager::GetInstance()->GetDistance(pos - posold) *m_Size;
 		m_pColl = CSphereCollision::Create(CSphereCollision::TYPE_PLAYERATTACK,Radius, m_nDamage, pos,Vec,NULL,this);
 	}

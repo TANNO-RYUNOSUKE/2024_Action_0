@@ -322,6 +322,7 @@ void CAfterImage::Uninit(void)
 void CAfterImage::Update(void)
 {
 	m_nLife--;
+	m_Col.a -= m_Col.a / m_nLife;
 	if (m_nLife <= 0)
 	{
 		Uninit();
@@ -373,7 +374,7 @@ void CAfterImage::Draw(void)
 			pMat[nCntMat].MatD3D.Emissive = m_Col * 0.5f;
 
 			pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
-			m_Col.a -= m_Col.a / m_nLife;
+			
 		}
 		else
 		{

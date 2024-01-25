@@ -58,6 +58,7 @@ public:
 	virtual float GetWidth(void) { return 0.0f; }
 	virtual void SetLife(int nLife) { };
 	virtual int GetLife() { return 0; }
+	virtual bool Damage(int nDamage, D3DXVECTOR3 knockback) { return false; }
 	virtual D3DXMATRIX GetMatrix(void) {D3DXMATRIX mtx;  D3DXMatrixIdentity(&mtx); return mtx;}
 	//int GetID(void) { return m_nID; }
 	

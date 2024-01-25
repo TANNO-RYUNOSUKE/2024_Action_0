@@ -21,6 +21,7 @@ public:
 	virtual void Uninit(void);
 	virtual void Update(void);
 	virtual void Draw(void);
+	void SetVtx();
 	void SetHeight(float fHeight) { m_fHeight = fHeight; }
 	float GetHeight(void) { return m_fHeight; }
 	void SetWidth(float fWidth) { m_fWidth = fWidth; }

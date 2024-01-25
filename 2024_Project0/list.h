@@ -9,13 +9,18 @@
 template <typename T> class Clist
 {
 public:
-	void Regist(T data) { list.push_back(data); }
-	void Delete(int nID) { list.erase(std::next(list.begin(), nID)); }
-	void Clear() { list.clear(); }
-	std::list<T> GetList() { return list; }
-
+	Clist() { list = new std::list<T>; }
+	~Clist() { delete list; list = NULL; };
+	void Regist(T & data) { list->push_back(data); }
+	void Delete(T data) { if (!list->empty()) { list->erase(std::find(list->begin(), list->end(), data)); } }
+	void Clear() { list->clear(); }
+	
+	std::list<T> * GetList() { return list; }
+	int GetNum() {return (int)list->size(); }
 private:
-	std::list<T> list;
+	std::list<T> * list;
 };
 
+
 #endif // !_List_H_
+

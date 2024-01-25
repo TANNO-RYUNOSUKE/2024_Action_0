@@ -10,7 +10,8 @@
 #include "model.h"
 #include "motion.h"
 #include "orbit.h"
-
+#include "collision.h"
+#include <vector>
 //マクロ定義
 #define GRAVITY (0.4f)
 #define WALK_SPEED (0.18f)
@@ -73,12 +74,15 @@ public:
 	void Attack2();
 	void Attack3();
 	void Attack4();
+	void DeletCollision();
+	void AutoCollisionCreate();
 private:
 	
 	int m_nLife;//体力
 
 	CMotion * m_pMotion;//モーションポインタ
 	COrbit *  m_pOrbit;
+	D3DXVECTOR3 m_Force;//外力
 	D3DXVECTOR3 m_posOld;//1フレーム前の座標
 	D3DXVECTOR3 m_rotDest;
 	D3DXVECTOR3 m_rotShot; //射撃方向
@@ -87,7 +91,10 @@ private:
 	bool m_bKey;
 	CModel * m_apModel[NUM_MODEL];//使用するモデルのポインタ
 	int m_nNumModel;//使用するモデルの数
-
+	int   m_nDamage;
+	float m_fPower;
+	float m_Size;
+	CSphereCollision * m_pColl;
 };
 
 #endif // ! _PLAYER_H_

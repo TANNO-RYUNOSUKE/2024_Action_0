@@ -20,7 +20,8 @@
 #include "debugproc.h"	
 #include "fade.h"
 #include "meshfield.h"
-
+#include "collision.h"
+#include "list.h"
 
 CFade * CScene::m_pFade = NULL;
 //=============================================
@@ -91,7 +92,7 @@ HRESULT CTitle::Init()
 	m_pTitle = CObject2D::Create(D3DXVECTOR3(SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.7f, 0.0f), 305.0f, 600.0f, 0, "data\\TEXTURE\\TITLE\\lab2.png");
 	m_posDest = D3DXVECTOR3(SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.7f, 0.0f);
 	CSound * pSound = CManager::GetInstance()->GetSound();
-	//pSound->Play(CSound::SOUND_LABEL_BGM000);
+	//pSound->Play(CSound::SOUND_LABEL_BGM001);
 	return S_OK;
 }
 //=============================================
@@ -216,10 +217,10 @@ HRESULT CGame::Init()
 	};
 
 	
-
+	CEnemy_TEST::Create(VECTO3ZERO, 10);
 
 	CSound * pSound = CManager::GetInstance()->GetSound();
-	//pSound->Play(CSound::SOUND_LABEL_BGM001);
+	pSound->Play(CSound::SOUND_LABEL_BGM_ZONE);
 
 
 	return S_OK;
@@ -247,7 +248,7 @@ void CGame::Uninit()
 	}
 
 
-
+	CSphereCollision::List.GetList()->clear();
 }
 //=============================================
 //XVŠÖ”
@@ -272,6 +273,22 @@ void CGame::Update()
 		{
 			CManager::GetInstance()->SetPause(true);
 		}
+	}
+	if (!CManager::GetInstance()->GetPause())
+	{
+		if (!CSphereCollision::List.GetList()->empty())
+		{
+			std::list<CSphereCollision *>::iterator Itr = CSphereCollision::List.GetList()->begin();
+			for (; Itr != CSphereCollision::List.GetList()->end(); Itr++)
+			{
+				CSphereCollision * Col = *Itr;
+				if (Col != NULL)
+				{
+					Col->Collision();
+				}
+			}
+		}
+	
 	}
 	if (m_nCnt % 900 == 0)
 	{

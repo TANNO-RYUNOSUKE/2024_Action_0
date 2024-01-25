@@ -25,15 +25,15 @@ HRESULT ReadChunkdata(HANDLE hFile, void *pBuffer, DWORD dwBuffersize, DWORD dwB
 SOUNDINFO g_aSoundInfo[CSound::SOUND_LABEL_MAX] =
 {
 	{"data/BGM/Meteorite.wav", -1},		// BGM0
-	{"data/BGM/battle1.wav", -1},		// BGM1
-	{ "data/BGM/RAIN_&amp_Co_II.wav", -1 },		// BGM2
+	{"data/BGM/battle3.wav", -1},		// BGM1
+	{ "data/BGM/ZONE.wav", -1 },		// BGM2
 	{"data/SE/shot.wav", 0},			// 弾発射音
 	{"data/SE/explosion.wav", 0},	// 爆発音
 	{ "data/SE/missile.wav", 0 },	
 	{ "data/SE/slash1.wav", 0 },
 	{ "data/SE/se_sword10.wav", 0 },
-	{ "data/SE/se_swing11.wav", 0 },
-	{ "data/SE/destruct1.wav", 0 },
+	{ "data/SE/se_swing.wav", 0 },
+	{ "data/SE/destruct.wav", 0 },
 	{ "data/SE/HighSpeed.wav", 0 },
 	{ "data/SE/Cyber05-6.wav", 0 },
 	{ "data/SE/ブースタージャンプ1.wav", 0 },

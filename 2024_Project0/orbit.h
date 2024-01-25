@@ -31,7 +31,8 @@ public:
 	LPDIRECT3DTEXTURE9 * GetTex(void) { return &m_pTexture; }
 	LPDIRECT3DVERTEXBUFFER9 * GetBuff(void) { return &m_pVtxBuff; }
 	void SetOffset(D3DXVECTOR3 pos1, D3DXVECTOR3 pos2) { m_Offset1 = pos1; m_Offset2 = pos2; }
-
+	D3DXVECTOR3 GetPos() { return m_pos; }
+	D3DXVECTOR3 GetPosOld() { return m_posOld; }
 protected:
 	//ポリゴン表示用
 	LPDIRECT3DTEXTURE9 m_pTexture;	//テクスチャへのポインタ
@@ -42,6 +43,8 @@ private:
 	D3DXVECTOR3 * m_pPosOld;//座標記録用
 	D3DXVECTOR3 m_Offset1;//座標
 	D3DXVECTOR3 m_Offset2;//座標
+	D3DXVECTOR3 m_pos;
+	D3DXVECTOR3 m_posOld;
 	D3DXMATRIX m_mtxWorld; //ワールドマトリックス
 	D3DXMATRIX * m_pMtx; 
 	int m_nTex;

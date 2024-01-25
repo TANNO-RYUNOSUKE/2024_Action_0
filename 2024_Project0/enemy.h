@@ -46,18 +46,20 @@ public:
 
 	
 	void AddLife(int nAdd) { m_nLife += nAdd; }//ライフに加算
-	void Damage(int nDamage, D3DXVECTOR3 knockback) { m_nLife -= nDamage, SetMove(GetMove() + knockback); }
-	
+	bool Damage(int nDamage, D3DXVECTOR3 knockback);
+	void SetState(STATE state, int nCnt) { m_state = state,m_nStateCount = nCnt; }
 protected:
 	D3DXVECTOR3 posOld;
+	STATE m_state;
 	int m_nStateCount;
 	float m_fdIstance;//プレイヤーとの距離
 	int m_nLife; //体力
 	D3DXVECTOR3 m_posDest;
+	D3DXVECTOR3 m_Force;
 	D3DXVECTOR3 m_rotDest;
 	CMotion * m_pMotion;//モーションポインタ
 	CModel * m_apModel[NUM_MODEL];//使用するモデルのポインタ
-
+	
 private:
 	
 };

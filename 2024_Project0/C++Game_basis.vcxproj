@@ -120,6 +120,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="animbillboard.h" />
     <ClInclude Include="billboard.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="collision.h" />
@@ -151,6 +152,7 @@
     <ClInclude Include="ZTexture.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="animbillboard.cpp" />
     <ClCompile Include="billboard.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />

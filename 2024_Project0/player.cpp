@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "model.h"
 #include "Supporter.h"
+#include "meshfield.h"
 
 //É}ÉNÉçíËã`
 #define MOVE_PLAYER (2.0f)
@@ -71,6 +72,10 @@ HRESULT CPlayer::Init()
 	m_bMotionLock = false;
 	m_bKey = false;
 	m_pOrbit = NULL;
+	m_pColl = NULL;
+	m_nDamage = 0;
+	m_fPower = 0.0f;
+	m_Size = 0.0f;
 	return S_OK;
 }
 //=============================================
@@ -78,8 +83,7 @@ HRESULT CPlayer::Init()
 //=============================================
 void CPlayer::Uninit()
 {
-	
-	
+	DeletCollision();
 	if (m_pMotion != NULL)
 	{
 		//m_pMotionUp->Uninit();
@@ -113,7 +117,7 @@ void CPlayer::Update()
 	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
 	
 	Action();
-
+	
 	SetPos(GetPos() + GetMove());
 	SetMove(GetMove() * 0.9);
 	D3DXVECTOR3 animRot = D3DXVECTOR3(0.0f,  ((m_rotDest.y - GetRot().y)), 0.0f);
@@ -126,7 +130,23 @@ void CPlayer::Update()
 		animRot.y += -D3DX_PI * 2;
 	}
 	SetRot(GetRot() + animRot /6);
-
+	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
+	if (pMesh != NULL)
+	{
+		D3DXVECTOR3 move = GetMove();
+		if (pMesh->Collision(GetPosAddress()))
+		{
+			
+				move.y = 0.0f;
+				m_bLand = true;
+		}
+		else
+		{
+			move.y -= GRAVITY;
+			m_bLand = false;
+		}
+		SetMove(move);
+	}
 }
 //=============================================
 //ï`âÊä÷êî
@@ -186,11 +206,13 @@ void CPlayer::Action()
 	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
 	CInputMouse * pInputMouse = CManager::GetInstance()->GetInputMouse();
 	m_pMotion->Update();
+	AutoCollisionCreate();
 	if (m_pMotion->GetType() < MOTION_COMBINATION1)
 	{
 		m_bMotionLock = false;
 
 		m_bKey = false;
+		DeletCollision();
 		if (m_pOrbit != NULL)
 		{
 			m_pOrbit->end();
@@ -204,14 +226,17 @@ void CPlayer::Action()
 	}
 	if (!m_bMotionLock)
 	{
-		if (pInputMouse->GetTrigger(pInputMouse->MOUSE_LEFT))
+		if (pInputMouse->GetTrigger(pInputMouse->MOUSE_LEFT) || pInputGamePad->GetTrigger(CInputGamePad::Button_Y,0))
 		{
 			if (m_pOrbit != NULL)
 			{
 				m_pOrbit->end();
 				m_pOrbit = NULL;
 			}
-			
+			m_nDamage = 0;
+			m_fPower = 0.0f;
+			m_Size = 0.0f;
+			DeletCollision();
 			m_bKey = true;
 			if (m_pMotion->GetType() < MOTION_COMBINATION1)
 			{
@@ -270,7 +295,8 @@ void CPlayer::Walk()
 	}
 	else
 	{
-		vec = pInputGamePad->GetStickL(0, 0.01f);
+		vec.x = pInputGamePad->GetStickL(0, 0.01f).x;
+		vec.z = -pInputGamePad->GetStickL(0, 0.01f).y;
 	}
 	if (vec != VECTO3ZERO)
 	{
@@ -306,10 +332,14 @@ void CPlayer::Walk()
 }
 void CPlayer::Attack1()
 {
+	m_nDamage = 5;
+	m_fPower = 10.0f;
+	m_Size = 3.0f;
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
 		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
 			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -54.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
 		}
 		
@@ -351,10 +381,14 @@ void CPlayer::Attack1()
 }
 void CPlayer::Attack2()
 {
+	m_nDamage = 8;
+	m_fPower = 10.0f;
+	m_Size = 1.2f;
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
 		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
 			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -44.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
 		}
 	}
@@ -393,10 +427,14 @@ void CPlayer::Attack2()
 }
 void CPlayer::Attack3()
 {
+	m_nDamage = 3;
+	m_fPower = 10.0f;
+	m_Size = 1.0f;
 	if (m_pMotion->GetKey() == 1)
 	{
 		if (m_pOrbit == NULL)
 		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
 			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -44.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
 		}
 	}
@@ -435,10 +473,15 @@ void CPlayer::Attack3()
 }
 void CPlayer::Attack4()
 {
+	m_nDamage = 15;
+	m_fPower = 20.0f;
+	m_Size = 5.0f;
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
 		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_DESTRUCT);
 			m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -60.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
 		}
 	}
@@ -446,6 +489,7 @@ void CPlayer::Attack4()
 	{
 		if (m_pOrbit != NULL)
 		{
+		
 			m_pOrbit->end();
 			m_pOrbit = NULL;
 		}
@@ -474,6 +518,27 @@ void CPlayer::Attack4()
 		m_bKey = false;
 		SetMove(GetMove() + AnglesToVector(GetRot()) * -4.0f);
 	}
+}
+void CPlayer::AutoCollisionCreate()
+{
+	if (m_pOrbit != NULL)
+	{
+		DeletCollision();
+		D3DXVECTOR3 posold = m_pOrbit->GetPosOld();
+		D3DXVECTOR3 pos = m_pOrbit->GetPos();
+		D3DXVECTOR3 Vec = -AnglesToVector(GetRot()) *m_fPower;
+		float Radius = CManager::GetInstance()->GetDistance(pos - posold) *m_Size;
+		m_pColl = CSphereCollision::Create(CSphereCollision::TYPE_PLAYERATTACK,Radius, m_nDamage, pos,Vec,NULL,this);
+	}
+}
+void CPlayer::DeletCollision()
+{
+	if (m_pColl != NULL)
+	{
+		delete m_pColl;
+		m_pColl = NULL;
+	}
+	
 }
 //=============================================
 //ê∂ê¨ä÷êî

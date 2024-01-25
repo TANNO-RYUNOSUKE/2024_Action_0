@@ -1,6 +1,6 @@
 //========================================================================================
 //
-// 3Dオブジェクト
+// ビルボード
 // Author: 丹野 竜之介
 //
 //========================================================================================
@@ -126,37 +126,7 @@ void CBillboard::Uninit(void)
 //=============================================
 void CBillboard::Update(void)
 {
-	CRenderer * pRenderer = CManager::GetInstance()->GetRenderer();
-	LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
-	pDevice = pRenderer->GetDevice();
-	VERTEX_3D * pVtx;
-	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
-
-	//頂点座標の設定
-	pVtx[0].pos = D3DXVECTOR3(-m_fWidth, +m_fHeight, 0.0f);
-	pVtx[1].pos = D3DXVECTOR3(+m_fWidth, +m_fHeight, 0.0f);
-	pVtx[2].pos = D3DXVECTOR3(-m_fWidth, -m_fHeight, 0.0f);
-	pVtx[3].pos = D3DXVECTOR3(+m_fWidth, -m_fHeight, 0.0f);
-
-	//法線ベクトルの設定
-	pVtx[0].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
-	pVtx[1].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
-	pVtx[2].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
-	pVtx[3].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
-
-	//テクスチャ座標
-	pVtx[0].tex = D3DXVECTOR2(0.0f, 0.0f);
-	pVtx[1].tex = D3DXVECTOR2(1.0f, 0.0f);
-	pVtx[2].tex = D3DXVECTOR2(0.0f, 1.0f);
-	pVtx[3].tex = D3DXVECTOR2(1.0f, 1.0f);
-
-	//頂点カラーの設定
-	pVtx[0].col = m_Cclor;
-	pVtx[1].col = m_Cclor;
-	pVtx[2].col = m_Cclor;
-	pVtx[3].col = m_Cclor;
-
-	m_pVtxBuff->Unlock();
+	SetVtx();
 }
 
 //=============================================
@@ -237,4 +207,38 @@ void CBillboard::Draw(void)
 
 	pDevice->SetRenderState(D3DRS_FOGENABLE, TRUE); //フォグの有効化
 	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
+}
+void CBillboard::SetVtx()
+{
+	CRenderer * pRenderer = CManager::GetInstance()->GetRenderer();
+	LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
+	pDevice = pRenderer->GetDevice();
+	VERTEX_3D * pVtx;
+	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
+
+	//頂点座標の設定
+	pVtx[0].pos = D3DXVECTOR3(-m_fWidth, +m_fHeight, 0.0f);
+	pVtx[1].pos = D3DXVECTOR3(+m_fWidth, +m_fHeight, 0.0f);
+	pVtx[2].pos = D3DXVECTOR3(-m_fWidth, -m_fHeight, 0.0f);
+	pVtx[3].pos = D3DXVECTOR3(+m_fWidth, -m_fHeight, 0.0f);
+
+	//法線ベクトルの設定
+	pVtx[0].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+	pVtx[1].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+	pVtx[2].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+	pVtx[3].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+
+	//テクスチャ座標
+	pVtx[0].tex = D3DXVECTOR2(0.0f, 0.0f);
+	pVtx[1].tex = D3DXVECTOR2(1.0f, 0.0f);
+	pVtx[2].tex = D3DXVECTOR2(0.0f, 1.0f);
+	pVtx[3].tex = D3DXVECTOR2(1.0f, 1.0f);
+
+	//頂点カラーの設定
+	pVtx[0].col = m_Cclor;
+	pVtx[1].col = m_Cclor;
+	pVtx[2].col = m_Cclor;
+	pVtx[3].col = m_Cclor;
+
+	m_pVtxBuff->Unlock();
 }

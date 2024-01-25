@@ -97,10 +97,11 @@ HRESULT COrbit::Init(void)
 	//	pVtx[nCnt + 1].pos = GetPos();
 
 	//}
-
+	
 	m_pVtxBuff->Unlock();
 	m_bDisp = false;
 	Update();
+	m_posOld = m_pos;
 	m_bDisp = true;
 	return S_OK;;
 }
@@ -151,7 +152,7 @@ void COrbit::Update(void)
 	LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
 	VERTEX_3D * pVtx;
 	pDevice = pRenderer->GetDevice();
-
+	m_posOld = m_pos;
 	D3DXMATRIX MtxOffset1, MtxOffset2;
 
 
@@ -167,6 +168,7 @@ void COrbit::Update(void)
 	D3DXVECTOR3 Pos1, Pos2;
 	Pos1 = D3DXVECTOR3(MtxOffset1._41, MtxOffset1._42, MtxOffset1._43);
 	Pos2 = D3DXVECTOR3(MtxOffset2._41, MtxOffset2._42, MtxOffset2._43);
+	m_pos = (Pos1 + Pos2)*0.5f;
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 	if (m_bDisp == true)
 	{

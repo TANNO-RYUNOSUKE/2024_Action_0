@@ -99,6 +99,9 @@ void CCamera::Update()
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	m_posRdest = pPlayer->GetPos();
 	m_posRdest.y += 50.0f;
+
+	m_rotDest.y += pInputGamePad->GetStickR(0, 0.01f).x* 0.05f;
+	m_rotDest.z -= pInputGamePad->GetStickR(0, 0.01f).y* 0.025f;
 	//Ž‹“_‚ÌˆÚ“®
 		m_rotDest.y -= pMouse->GetMove().x * 0.006f;
 		m_rotDest.z -= pMouse->GetMove().y * 0.006f;

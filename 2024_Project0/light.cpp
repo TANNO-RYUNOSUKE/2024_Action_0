@@ -27,6 +27,7 @@ HRESULT CLight::Init(void)
 	D3DXVECTOR3 vecDir; //設定用方向ベクトル
 	//ライトの情報をクリアする
 	ZeroMemory(&m_aLight, sizeof(D3DLIGHT9));
+
 	for (int nCntLight = 0; nCntLight < NUM_LIGHT; nCntLight++)
 	{
 		

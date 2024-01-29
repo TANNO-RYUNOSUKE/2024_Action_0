@@ -12,6 +12,7 @@
 
 #include "camera.h"
 #include "light.h"
+#include "animbillboard.h"
 
 #include "player.h"
 #include "input.h"
@@ -22,7 +23,9 @@
 #include "meshfield.h"
 #include "collision.h"
 #include "list.h"
+#include "objectX.h"
 #include "texture.h"
+#include "audience.h"
 CFade * CScene::m_pFade = NULL;
 //=============================================
 //コンストラクタ
@@ -88,9 +91,8 @@ HRESULT CTitle::Init()
 {
 	m_pFade = DBG_NEW CFade;
 	m_pFade->Init();
-	CObject2D::Create(D3DXVECTOR3(SCREEN_WIDTH /2, SCREEN_HEIGHT/2, 0.0f),SCREEN_HEIGHT,SCREEN_WIDTH,0, "data\\TEXTURE\\TITLE\\lab1.png");
-	m_pTitle = CObject2D::Create(D3DXVECTOR3(SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.7f, 0.0f), 305.0f, 600.0f, 0, "data\\TEXTURE\\TITLE\\lab2.png");
-	m_posDest = D3DXVECTOR3(SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.7f, 0.0f);
+	CObject2D::Create(D3DXVECTOR3(SCREEN_WIDTH /2, SCREEN_HEIGHT/2, 0.0f),SCREEN_HEIGHT,SCREEN_WIDTH,0, "data\\TEXTURE\\TITLE\\ss.png");
+	
 	CSound * pSound = CManager::GetInstance()->GetSound();
 	//pSound->Play(CSound::SOUND_LABEL_BGM001);
 	return S_OK;
@@ -108,13 +110,7 @@ void CTitle::Uninit()
 void CTitle::Update()
 {
 	
-	m_pTitle->SetPos(m_pTitle->GetPos() + (m_posDest - m_pTitle->GetPos()) / 120);
-	if (CManager::GetInstance()->GetDistance((m_pTitle->GetPos() - m_posDest)) <= 10.0f)
-	{
-		m_posDest = D3DXVECTOR3(SCREEN_WIDTH * 0.3f, SCREEN_HEIGHT * 0.7f, 0.0f);
 	
-		m_posDest.x += rand() % 100 - 50;
-	}
 	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
 	CInputGamePad * pInputGamepad = CManager::GetInstance()->GetInputGamePad();
 	if (pInputKeyboard->GetTrigger(DIK_RETURN)|| pInputGamepad->GetTrigger(CInputGamePad::Button_START,0))
@@ -205,6 +201,7 @@ HRESULT CGame::Init()
 	m_pLight = DBG_NEW CLight;
 	m_pMeshfield = CMeshfield::Create(100.0f, 100.0f, 70, 70);
 	m_pPlayer = CPlayer::Create();
+	m_nEnemyCount = 0;
 	CTexture * pTex = CManager::GetInstance()->GetTexture();
 	//初期化設定;
 	
@@ -216,15 +213,17 @@ HRESULT CGame::Init()
 	{
 		return -1;
 	};
-
+	CObjectX::Create("data\\MODEL\\sky.x", VECTO3ZERO, VECTO3ZERO,0)->SetLight(false);
 	pTex->Regist("data\\TEXTURE\\spelhit.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect.png");
+	pTex->Regist("data\\TEXTURE\\HitEffect2.png");
 	CEnemy_TEST::Create(VECTO3ZERO, 100);
-
+	CEnemy_TEST::Create(D3DXVECTOR3(100.0f,0.0f,0.0f), 150);
+	CEnemy_TEST::Create(D3DXVECTOR3(-100.0f, 0.0f, 0.0f), 50);
 	CSound * pSound = CManager::GetInstance()->GetSound();
 	pSound->Play(CSound::SOUND_LABEL_BGM_ZONE);
 
-
+	CAudience::Create();
 	return S_OK;
 	return S_OK;
 }
@@ -259,7 +258,14 @@ void CGame::Update()
 {
 	CDebugProc * pDeb = CManager::GetInstance()->GetDeb();
 	m_nCnt++;
-
+	if (m_nCnt % (10 * 60)== 0 && m_nEnemyCount < 3)
+	{
+		D3DXVECTOR3 pos = D3DXVECTOR3(rand() % 10000 * 0.1f, 0.0f, rand() % 10000 * 0.1f);
+		CEnemy_TEST::Create(pos, 50);
+		CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
+		CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
+		m_nEnemyCount++;
+	}
 	m_pCamera->Update();
 	m_pLight->Update();
 	//m_pMap_Editer->Update();
@@ -292,14 +298,12 @@ void CGame::Update()
 		}
 	
 	}
-	if (m_nCnt % 900 == 0)
+	if (m_nEnemyCount >= 3 && CEnemy::EnemyList.GetNum() == 0)
 	{
-		for (int nCnt = 0; nCnt < 5; nCnt++)
-		{
-			//CEnemy_Walker::Create(D3DXVECTOR3((float)(rand() % 3000 - 1500), 10000.0f, (float)(rand() % 3000 - 1500)), 5);
-		}
+		m_pFade->FadeOut(MODE::MODE_RESULT);
 	}
-	if (pInputKeyboard->GetTrigger(DIK_RETURN) || pInputGamepad->GetTrigger(CInputGamePad::Button_START, 0))
+	
+	if (pInputKeyboard->GetTrigger(DIK_RETURN))
 	{
 		m_pFade->FadeOut(MODE::MODE_RESULT);
 	}

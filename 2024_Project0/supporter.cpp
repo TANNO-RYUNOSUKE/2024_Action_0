@@ -35,3 +35,20 @@ D3DXVECTOR3 AnglesToVector(const D3DXVECTOR3& angles)
 
 	return vector;
 }
+
+float ComparisonAngle(const D3DXVECTOR3& Direction1, const D3DXVECTOR3& Direction2)
+{
+	// ベクトルの正規化
+	D3DXVECTOR3 normalizedCameraDir, normalizedEnemyDir;
+	D3DXVec3Normalize(&normalizedCameraDir, &Direction1);
+	D3DXVec3Normalize(&normalizedEnemyDir, &Direction2);
+	// ベクトルの内積を計算
+	float dotProduct = D3DXVec3Dot(&normalizedCameraDir, &normalizedEnemyDir);
+	float fAnswer = acosf(dotProduct) * (180.0f / D3DX_PI);
+	if (fAnswer < 0.0f)
+	{
+		fAnswer *= -1;
+	}
+	// ラジアンから度数法に変換して返す
+	return fAnswer;
+}

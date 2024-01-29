@@ -22,7 +22,7 @@ public:
 	void Update(void);
 	void Draw(void);
 
-	static COrbit * Create(int nLength, D3DXCOLOR col,D3DXVECTOR3 Offset1, D3DXVECTOR3 Offset2, D3DXMATRIX * pMtx,int nPriority = 4);
+	static COrbit * Create(int nLength, D3DXCOLOR col,D3DXVECTOR3 Offset1, D3DXVECTOR3 Offset2, D3DXMATRIX * pMtx,char * Tex = NULL,int nPriority = 5);
 
 
 	void end(void) { m_bEnd = true; }

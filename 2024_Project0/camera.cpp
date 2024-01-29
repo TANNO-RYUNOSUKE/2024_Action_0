@@ -39,7 +39,7 @@ CCamera::~CCamera()
 HRESULT CCamera::Init()
 {
 	nCntShake = 0;
-	m_fLengthCamera = +200;
+	m_fLengthCamera = +300;
 	m_bDirection = false;
 	m_moveR = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_moveV = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -97,8 +97,7 @@ void CCamera::Update()
 
 	
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
-	m_posRdest = pPlayer->GetPos();
-	m_posRdest.y += 50.0f;
+	
 
 	m_rotDest.y += pInputGamePad->GetStickR(0, 0.01f).x* 0.05f;
 	m_rotDest.z -= pInputGamePad->GetStickR(0, 0.01f).y* 0.025f;
@@ -110,8 +109,8 @@ void CCamera::Update()
 		m_posVdest.y = m_posR.y + sinf(m_rot.z) *m_fLengthCamera;
 
 
-	m_posR += (m_posRdest - m_posR) * 0.25f;
-	m_posV += (m_posVdest - m_posV) * 0.25f;
+	m_posR += (m_posRdest - m_posR) * 0.1f;
+	m_posV += (m_posVdest - m_posV) * 0.1f;
 	D3DXVECTOR3 RotMove = m_rotDest - m_rot;
 	if (RotMove.y > D3DX_PI)
 	{

@@ -11,16 +11,19 @@
 #include "motion.h"
 #include "orbit.h"
 #include "collision.h"
+#include "enemy.h"
+#include "billboard.h"
 #include <vector>
 //マクロ定義
 #define GRAVITY (0.8f)
 #define WALK_SPEED (0.18f)
+#define DASH_SPEED (1.0f)
 #define ENERGY_MAX (3.0f)
 //クラス定義
 class CPlayer : public CObject //オブジェクトクラスの継承
 {
 public:
-	CPlayer(int nPriority = 3);
+	CPlayer(int nPriority = 5);
 	~CPlayer();
 
 	typedef enum 
@@ -28,6 +31,7 @@ public:
 		MOTION_NONE = -1,
 		MOTION_NEUTRAL,
 		MOTION_WALK,
+		MOTION_DASH,
 		
 		MOTION_COMBINATION1,
 		MOTION_COMBINATION2,
@@ -70,12 +74,16 @@ public:
 	void Action();
 
 	void Walk();
+	void Dash();
 	void Attack1();
 	void Attack2();
 	void Attack3();
 	void Attack4();
 	void DeletCollision();
 	void AutoCollisionCreate();
+	void Direction();
+	void Mirage();
+	void Lockon();
 private:
 	
 	int m_nLife;//体力
@@ -94,7 +102,9 @@ private:
 	int   m_nDamage;
 	float m_fPower;
 	float m_Size;
+	CEnemy ** m_pEnemy;
 	CSphereCollision * m_pColl;
+	CBillboard * m_pTarget;
 };
 
 #endif // ! _PLAYER_H_

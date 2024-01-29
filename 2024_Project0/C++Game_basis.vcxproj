@@ -123,6 +123,7 @@
     <ClInclude Include="animbillboard.h" />
     <ClInclude Include="audience.h" />
     <ClInclude Include="billboard.h" />
+    <ClInclude Include="bullet.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="collision.h" />
     <ClInclude Include="debugproc.h" />
@@ -154,7 +155,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="animbillboard.cpp" />
+    <ClCompile Include="audience.cpp" />
     <ClCompile Include="billboard.cpp" />
+    <ClCompile Include="bullet.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="debugproc.cpp" />

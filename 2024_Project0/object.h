@@ -60,6 +60,7 @@ public:
 	virtual int GetLife() { return 0; }
 	virtual bool Damage(int nDamage, D3DXVECTOR3 knockback) { return false; }
 	virtual D3DXMATRIX GetMatrix(void) {D3DXMATRIX mtx;  D3DXMatrixIdentity(&mtx); return mtx;}
+	virtual D3DXMATRIX * GetMatrixAddress(void) { return &m_mtx; }
 	//int GetID(void) { return m_nID; }
 	
 	static CObject * GetTop(int nPriority) {

@@ -140,6 +140,7 @@ private:
 	 CMeshfield * m_pMeshfield;//メッシュフィールドへのポインタ
 
 	int m_nCnt;
+	int m_nEnemyCount;
 	bool b_Pause;//ポーズ
 };
 

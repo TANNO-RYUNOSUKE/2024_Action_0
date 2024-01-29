@@ -22,6 +22,7 @@ public:
 		TYPE_ENEMY,
 		TYPE_PLAYERATTACK,
 		TYPE_ENEMYATTACK,
+		TYPE_AUDIENCEATTACK,
 		TYPE_INDISCRIMINATEATTACK,
 		TYPE_MAX
 	};
@@ -41,6 +42,7 @@ private:
 	D3DXVECTOR3 m_Offset;
 	D3DXVECTOR3 m_knockback;
 	CObject * m_pParent;
+	bool m_bDeath;
 	TYPE m_Type;
 };
 

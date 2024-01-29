@@ -13,7 +13,7 @@ class CBillboard : public CObject //オブジェクトクラスの継承
 {
 public:
 
-	CBillboard(int nPriority = 1);
+	CBillboard(int nPriority = 5);
 
 	~CBillboard();
 

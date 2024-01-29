@@ -12,7 +12,7 @@
 #include "motion.h"
 #include "orbit.h"
 #include "collision.h"
-
+#include "light.h"
 
 //クラス定義
 class CEnemy : public CObject //オブジェクトクラスの継承
@@ -48,6 +48,7 @@ public:
 	void AddLife(int nAdd) { m_nLife += nAdd; }//ライフに加算
 	bool Damage(int nDamage, D3DXVECTOR3 knockback);
 	void SetState(STATE state, int nCnt) { m_state = state,m_nStateCount = nCnt; }
+	static Clist<CEnemy *> EnemyList;
 protected:
 	D3DXVECTOR3 posOld;
 	STATE m_state;

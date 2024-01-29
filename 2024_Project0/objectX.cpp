@@ -26,7 +26,7 @@ CObjectX::CObjectX(int nPriority) : CObject(nPriority)
 	m_pVtxBuff = NULL;
 	m_vtxMaxModel = D3DXVECTOR3(-1000.0f, -1000.0f, -1000.0f);
 	m_vtxMinModel = D3DXVECTOR3(1000.0f, 1000.0f, 1000.0f);
-
+	m_bLight = true;
 }
 
 
@@ -194,7 +194,8 @@ void CObjectX::Draw(void)
 
 	//ワールドマトリクスの設定
 	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
-
+	//ライティング
+	pDevice->SetRenderState(D3DRS_LIGHTING, m_bLight);
 	//現在のマテリアルを取得
 	pDevice->GetMaterial(&matDef);
 	if (pXFile->GetMaterial(m_nIdxXFile) != NULL)
@@ -217,7 +218,7 @@ void CObjectX::Draw(void)
 	}
 	//保存していたマテリアルを戻す
 	pDevice->SetMaterial(&matDef);
-
+	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
 }
 //=============================================
 //当たり判定

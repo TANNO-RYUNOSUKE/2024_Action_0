@@ -57,6 +57,10 @@ void CTexture::Unload(void)
 //=============================================
 int CTexture::Regist(char * pFilename)
 {
+	if (pFilename == NULL)
+	{
+		return -1;
+	}
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetInstance()->GetRenderer()->GetDevice();
 	int nIdx = m_nNumAll;
 

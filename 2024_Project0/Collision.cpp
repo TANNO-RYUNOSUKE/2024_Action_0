@@ -51,6 +51,25 @@ void CSphereCollision::Collision()
 			}
 		}
 		break;
+	case CSphereCollision::TYPE_AUDIENCEATTACK:
+		for (int i = 0; i < (int)List.GetList()->size(); i++)
+		{
+			CSphereCollision * pCollision = *std::next(List.GetList()->begin(), i);
+			if (pCollision->m_Type == TYPE_ENEMY)
+			{
+				if (CManager::GetInstance()->GetDistance(pCollision->m_Pos - m_Pos) <= (m_fRadius + pCollision->m_fRadius))
+				{
+					if (pCollision->m_pParent->Damage(m_nPower, m_knockback))
+					{
+						CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SHOT);
+						CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false,  m_Pos + m_knockback, "data\\TEXTURE\\HitEffect2.png");
+						m_pParent->SetLife(0);
+						return;
+					}
+				}
+			}
+		}
+		break;
 	case CSphereCollision::TYPE_ENEMYATTACK:
 		break;
 	case CSphereCollision::TYPE_INDISCRIMINATEATTACK:

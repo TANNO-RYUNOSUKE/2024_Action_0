@@ -13,7 +13,7 @@
 
 //マクロ定義
 #define CLASS_NAME "WindowClass"     //ウィンドウクラスの名前
-#define WINDOW_NAME "action02"  //ウィンドウの名前
+#define WINDOW_NAME "Stardum Stride"  //ウィンドウの名前
 #define ID_TIMER (131)
 #define TIMER_INTERVAL (1000/60)
 

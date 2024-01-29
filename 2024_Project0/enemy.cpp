@@ -14,6 +14,9 @@
 #include "player.h"
 #include "animbillboard.h"
 #include "sound.h"
+#include "player.h"
+
+Clist<CEnemy *> CEnemy::EnemyList = {};
 //=============================================
 //コンストラクタ
 //=============================================
@@ -26,14 +29,14 @@ CEnemy::CEnemy() :CObject()
 	{
 		m_apModel[i] = NULL;
 	}
-	
-
+	EnemyList.Regist(this);
 }
 //=============================================
 //デストラクタ
 //=============================================
 CEnemy::~CEnemy()
 {
+	EnemyList.Delete(this);
 }
 
 //=============================================
@@ -231,6 +234,7 @@ void CEnemy_TEST::Uninit()
 void CEnemy_TEST::Update()
 {
 	CEnemy::Update();
+	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
 	if (pMesh != NULL)
 	{
@@ -245,6 +249,15 @@ void CEnemy_TEST::Update()
 		}
 		SetMove(move);
 	}
+	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD)
+	{
+		D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
+		vec.y = 0.0f;
+		D3DXVec3Normalize(&vec, &vec);
+		SetMove(GetMove() + vec * 0.03f);		
+	}
+	SetPos(GetPos() + GetMove());
+	SetMove(GetMove()*0.9f);
 }
 
 //=============================================
@@ -266,5 +279,7 @@ CEnemy_TEST * CEnemy_TEST::Create(D3DXVECTOR3 pos, int nLife)
 	pEnemy->SetPos(pos);
 	pEnemy->m_nLife = nLife;
 	pEnemy->Init();
+
+	
 	return pEnemy;
 }

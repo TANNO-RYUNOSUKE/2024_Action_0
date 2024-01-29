@@ -19,7 +19,7 @@ COrbit::COrbit(int nPriority) : CObject(nPriority)
 	m_bEnd = false;
 	m_pTexture = NULL;
 	m_pVtxBuff = NULL;
-	
+	m_nTex = -1;
 	m_nLength = 0;
 	m_nLife = 300;
 }
@@ -46,14 +46,14 @@ HRESULT COrbit::Init(void)
 	LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
 	pDevice = pRenderer->GetDevice();
 	
-	CTexture * pTex = CManager::GetInstance()->GetTexture();
+
 	pDevice->CreateVertexBuffer(sizeof(VERTEX_3D) * 4 * m_nLength,
 		D3DUSAGE_WRITEONLY,
 		{ FVF_VERTEX_3D },
 		D3DPOOL_MANAGED,
 		&m_pVtxBuff,
 		NULL);
-	m_nTex = pTex->Regist("data\\TEXTURE\\OrbitBrade.png");
+	
 	VERTEX_3D * pVtx;
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 
@@ -108,8 +108,9 @@ HRESULT COrbit::Init(void)
 //=============================================
 //生成関数
 //=============================================
-COrbit * COrbit::Create(int nLength, D3DXCOLOR col, D3DXVECTOR3 Offset1, D3DXVECTOR3 Offset2, D3DXMATRIX * pMtx, int nPriority)
+COrbit * COrbit::Create(int nLength, D3DXCOLOR col, D3DXVECTOR3 Offset1, D3DXVECTOR3 Offset2, D3DXMATRIX * pMtx,char * Tex ,int nPriority)
 {
+	CTexture * pTex = CManager::GetInstance()->GetTexture();
 	COrbit * pOrbit = NULL;
 
 	pOrbit = DBG_NEW COrbit(nPriority);
@@ -120,6 +121,8 @@ COrbit * COrbit::Create(int nLength, D3DXCOLOR col, D3DXVECTOR3 Offset1, D3DXVEC
 	pOrbit->m_Offset2 = Offset2;
 	pOrbit->m_pMtx = pMtx;
 	pOrbit->Init();
+	pOrbit->m_nTex = pTex->Regist(Tex);
+
 	return pOrbit;
 }
 

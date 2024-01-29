@@ -12,7 +12,7 @@ class CAnimBillboard : public CBillboard //オブジェクトクラスの継承
 {
 public:
 
-	CAnimBillboard(int nPriority = 6);
+	CAnimBillboard(int nPriority = 4);
 
 	~CAnimBillboard();
 

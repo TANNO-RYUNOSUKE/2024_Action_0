@@ -35,6 +35,7 @@ public:
 	int GetID(void) { return m_nID; }
 
 	void SetName(std::string name) { m_pModelName = name; }
+	void SetLight(bool bLight) { m_bLight = bLight; }
 	std::string GetName(void) { return m_pModelName; }
 protected:
 	//ポリゴン表示用
@@ -44,7 +45,7 @@ protected:
 	int m_nIdxXFile;
 private:
 	std::string m_pModelName;//読み込むモデルの名前
-	
+	bool m_bLight;
 	D3DXVECTOR3 m_vtxMinModel, m_vtxMaxModel;//モデルの最少と最大
 
 	

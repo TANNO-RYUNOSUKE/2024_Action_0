@@ -63,8 +63,9 @@ CPlayer::~CPlayer()
 //=============================================
 HRESULT CPlayer::Init()
 {
-	
+	m_pTarget = CBillboard::Create(50.0f, 50.0f, GetPos(), "data\\TEXTURE\\target.png");
 	m_nLife = 5;
+	m_pEnemy = DBG_NEW CEnemy*;
 	m_rotDest = VECTO3ZERO;
 	m_pMotion = DBG_NEW CMotion;
 	m_pMotion->SetModel(&m_apModel[0]);
@@ -114,12 +115,31 @@ void CPlayer::Update()
 	m_posOld = GetPos();
 	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
 	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+	CInputMouse * pInputMouse = CManager::GetInstance()->GetInputMouse();
 	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	if (pInputMouse->GetPress(CInputMouse::MOUSE_RIGTH) || pInputGamePad->GetPedalR(0))
+	{
+		Lockon();
+	}
+	else
+	{
+		*m_pEnemy = NULL;
+	}
+	if (*m_pEnemy == NULL)
+	{
+		D3DXVECTOR3 pos = GetPos();
+		pos.y += 50.0f;
+		pCamera->SetRDest(pos);
+		pCamera->SetLenght(+300.0f);
+		m_pTarget->SetHeight(m_pTarget->GetHeight() + (100.0f - m_pTarget->GetHeight()) * 0.2f);
+		m_pTarget->SetWidth(m_pTarget->GetWidth() + (100.0f - m_pTarget->GetWidth()) * 0.2f);
+		m_pTarget->SetColor(m_pTarget->GetColor() + (D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f) - m_pTarget->GetColor()) * 0.2f);
+	}
 	
 	Action();
 	
 	SetPos(GetPos() + GetMove());
-	SetMove(GetMove() * 0.9);
+	SetMove(GetMove() * 0.9f);
 	D3DXVECTOR3 animRot = D3DXVECTOR3(0.0f,  ((m_rotDest.y - GetRot().y)), 0.0f);
 	if (animRot.y< -D3DX_PI)
 	{
@@ -221,8 +241,18 @@ void CPlayer::Action()
 	}
 	if (!m_bMotionLock && m_pMotion->GetType() < MOTION_COMBINATION1)
 	{
-		Walk();
+		CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+		D3DXVECTOR3 vec = pInputGamePad->GetStickL(0,0.1f);
 
+		if (CManager::GetInstance()->GetDistance(vec) <= 0.9f || pInputKeyboard->GetPress(DIK_LSHIFT))
+		{
+			Walk();
+		}
+		else
+		{
+			Dash();
+		}
+		
 	}
 	if (!m_bMotionLock)
 	{
@@ -330,17 +360,82 @@ void CPlayer::Walk()
 		m_pMotion->SetType(MOTION_NEUTRAL);
 	}
 }
+void CPlayer::Dash()
+{
+	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
+	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	D3DXVECTOR3 vec = VECTO3ZERO;
+	D3DXVECTOR3 rot = VECTO3ZERO;
+	if (pInputKeyboard->GetPress(DIK_W) || pInputKeyboard->GetPress(DIK_A) || pInputKeyboard->GetPress(DIK_S) || pInputKeyboard->GetPress(DIK_D))
+	{
+		if (pInputKeyboard->GetPress(DIK_W))
+		{
+			vec.z += 1.0f;
+		}
+		if (pInputKeyboard->GetPress(DIK_A))
+		{
+			vec.x -= 1.0f;
+		}
+		if (pInputKeyboard->GetPress(DIK_S))
+		{
+			vec.z -= 1.0f;
+		}
+		if (pInputKeyboard->GetPress(DIK_D))
+		{
+			vec.x += 1.0f;
+		}
+
+	}
+	else
+	{
+		vec.x = pInputGamePad->GetStickL(0, 0.01f).x;
+		vec.z = -pInputGamePad->GetStickL(0, 0.01f).y;
+	}
+	if (vec != VECTO3ZERO)
+	{
+		D3DXVec3Normalize(&vec, &vec);
+		if (pCamera != NULL)
+		{
+			rot = pCamera->GetRot();
+
+			D3DXMATRIX RotMtx;
+			D3DXMatrixIdentity((&RotMtx));
+			D3DXMatrixRotationY(&RotMtx, rot.y);
+			D3DXVec3TransformCoord(&vec, &vec, &RotMtx);
+			vec *= -1;
+			//å¸Ç´ÇîΩâf
+
+		}
+		if (m_pMotion->GetKey() != 3 && m_pMotion->GetKey() != 7)
+		{
+			SetMove(GetMove() + vec*DASH_SPEED);
+		}
+		else
+		{
+			//SetMove(GetMove() + vec*WALK_SPEED * 0.25f);
+		}
+		m_rotDest.y = atan2f(-vec.x, -vec.z);
+
+		m_pMotion->SetType(MOTION_DASH);
+	}
+	else
+	{
+		m_pMotion->SetType(MOTION_NEUTRAL);
+	}
+}
 void CPlayer::Attack1()
 {
 	m_nDamage = 5;
 	m_fPower = 7.0f;
 	m_Size = 2.0f;
+	Direction();
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
 		{
 			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
-			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -54.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
+			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -54.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
 		}
 		
 		
@@ -355,14 +450,7 @@ void CPlayer::Attack1()
 	}
 	else
 	{
-		for (int i = 0; i < 14; i++)
-		{
-			if (m_apModel[i] != NULL)
-			{
-				CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f), 60);
-			}
-
-		}
+		Mirage();
 	}
 	if (m_pMotion->GetKey() <= 3)
 	{
@@ -382,14 +470,15 @@ void CPlayer::Attack1()
 void CPlayer::Attack2()
 {
 	m_nDamage = 8;
-	m_fPower = 7.0f;
-	m_Size = 1.2f;
+	m_fPower = 10.0f;
+	m_Size = 2.0f;
+	Direction();
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
 		{
 			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
-			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -44.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
+			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -44.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
 		}
 	}
 	if (m_pMotion->GetKey() >= 5)
@@ -402,14 +491,7 @@ void CPlayer::Attack2()
 	}
 	else
 	{
-		for (int i = 0; i < 14; i++)
-		{
-			if (m_apModel[i] != NULL)
-			{
-				CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f), 60);
-			}
-
-		}
+		Mirage();
 	}
 	if (m_pMotion->GetKey() <= 2)
 	{
@@ -430,12 +512,13 @@ void CPlayer::Attack3()
 	m_nDamage = 3;
 	m_fPower = 10.0f;
 	m_Size = 1.0f;
+	Direction();
 	if (m_pMotion->GetKey() == 1)
 	{
 		if (m_pOrbit == NULL)
 		{
 			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
-			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -44.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
+			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -44.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
 		}
 	}
 	if (m_pMotion->GetKey() >= 4)
@@ -448,14 +531,7 @@ void CPlayer::Attack3()
 	}
 	else
 	{
-		for (int i = 0; i < 14; i++)
-		{
-			if (m_apModel[i] != NULL)
-			{
-				CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f), 60);
-			}
-
-		}
+		Mirage();
 	}
 	if (m_pMotion->GetKey() <= 3)
 	{
@@ -475,14 +551,14 @@ void CPlayer::Attack4()
 {
 	m_nDamage = 15;
 	m_fPower = 20.0f;
-	m_Size = 5.0f;
+	m_Size = 2.0f;
 	if (m_pMotion->GetKey() == 2)
 	{
 		if (m_pOrbit == NULL)
 		{
 			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
 			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_DESTRUCT);
-			m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -60.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress());
+			m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -60.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
 		}
 	}
 	 if (m_pMotion->GetKey() >= 4)
@@ -496,14 +572,7 @@ void CPlayer::Attack4()
 	}
 	 else
 	 {
-		 for (int i = 0; i < 14; i++)
-		 {
-			 if (m_apModel[i] != NULL)
-			 {
-				 CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f), 60);
-			 }
-
-		 }
+		 Mirage();
 	 }
 	if (m_pMotion->GetKey() <= 4)
 	{
@@ -540,6 +609,127 @@ void CPlayer::DeletCollision()
 		m_pColl = NULL;
 	}
 	
+}
+void CPlayer::Direction()
+{
+	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
+	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	D3DXVECTOR3 vec = VECTO3ZERO;
+	D3DXVECTOR3 rot = VECTO3ZERO;
+	if (*m_pEnemy == NULL)
+	{
+
+		if (pInputKeyboard->GetPress(DIK_W) || pInputKeyboard->GetPress(DIK_A) || pInputKeyboard->GetPress(DIK_S) || pInputKeyboard->GetPress(DIK_D))
+		{
+			if (pInputKeyboard->GetPress(DIK_W))
+			{
+				vec.z += 1.0f;
+			}
+			if (pInputKeyboard->GetPress(DIK_A))
+			{
+				vec.x -= 1.0f;
+			}
+			if (pInputKeyboard->GetPress(DIK_S))
+			{
+				vec.z -= 1.0f;
+			}
+			if (pInputKeyboard->GetPress(DIK_D))
+			{
+				vec.x += 1.0f;
+			}
+
+		}
+		else
+		{
+			vec.x = pInputGamePad->GetStickL(0, 0.01f).x;
+			vec.z = -pInputGamePad->GetStickL(0, 0.01f).y;
+		}
+		if (vec != VECTO3ZERO)
+		{
+			D3DXVec3Normalize(&vec, &vec);
+			if (pCamera != NULL)
+			{
+				rot = pCamera->GetRot();
+
+				D3DXMATRIX RotMtx;
+				D3DXMatrixIdentity((&RotMtx));
+				D3DXMatrixRotationY(&RotMtx, rot.y);
+				D3DXVec3TransformCoord(&vec, &vec, &RotMtx);
+				vec *= -1;
+				//å¸Ç´ÇîΩâf
+
+			}
+
+			m_rotDest.y = atan2f(-vec.x, -vec.z);
+		}
+	}
+	else
+	{
+		vec = (*m_pEnemy)->GetPos() - GetPos();
+		m_rotDest.y = atan2f(-vec.x, -vec.z);
+	}
+}
+void CPlayer::Mirage()
+{
+
+	for (int i = 0; i < 14; i++)
+	{
+		if (m_apModel[i] != NULL)
+		{
+			CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f), 60);
+		}
+
+	}
+}
+void CPlayer::Lockon()
+{
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	if (*m_pEnemy == NULL)
+	{
+	
+		int nSize = CEnemy::EnemyList.GetNum();
+		float fAngle = FLT_MAX;
+		float fAngleCheck = 0.0f;
+		CEnemy * pEnemy = NULL;
+
+		for (int i = 0; i < nSize; i++)
+		{
+			pEnemy = CEnemy::EnemyList.Get(i);
+			if (pEnemy != NULL)
+			{
+				fAngleCheck = ComparisonAngle(-pCamera->GetVec(), pEnemy->GetPos() - pCamera->GetPosV());
+				if (fAngleCheck < 45.0f)
+				{
+					if (fAngle > fAngleCheck)
+					{
+						fAngle = fAngleCheck;
+						*m_pEnemy = pEnemy;
+						m_pTarget->SetPos((*m_pEnemy)->GetPos());
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		
+		D3DXVECTOR3 pos = (*m_pEnemy)->GetPos();
+		pos.y += 50.0f;
+		pCamera->SetRDest((GetPos()+ pos) * 0.5f);
+		float fLength = CManager::GetInstance()->GetDistance((GetPos() + pos)) *0.5f;
+		if (fLength < 300.0f)
+		{
+			fLength = 300.0f;
+		}
+		D3DXVECTOR3 vec = pos - GetPos();
+		pCamera->SetLenght(fLength);
+		pCamera->SetRot(D3DXVECTOR3(atan2f(-vec.y, -vec.z) + 0.5f, atan2f(-vec.x, -vec.z),0.0f));
+		m_pTarget->SetHeight(m_pTarget->GetHeight() + (50.0f - m_pTarget->GetHeight()) * 0.2f);
+		m_pTarget->SetWidth(m_pTarget->GetWidth() + (50.0f - m_pTarget->GetWidth()) * 0.2f);
+		m_pTarget->SetColor(m_pTarget->GetColor() + (D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f) - m_pTarget->GetColor()) * 0.2f);
+		m_pTarget->SetPos(m_pTarget->GetPos() + (pos - m_pTarget->GetPos()) * 0.3f);
+	}
 }
 //=============================================
 //ê∂ê¨ä÷êî

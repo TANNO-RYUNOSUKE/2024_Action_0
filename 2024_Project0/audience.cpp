@@ -13,6 +13,9 @@
 #include "scene.h"
 #include "Supporter.h"
 #include "bullet.h"
+
+Clist<CAudience *> CAudience::List = {};
+
 //====================================
 //コンストラクタ、デストラクタ
 //====================================
@@ -23,10 +26,12 @@ CAudience::CAudience(int nPriority) : CObject(nPriority)
 	m_PosDest = VECTO3ZERO;
 	m_state = STATE_NONE;
 	m_pModel = NULL;
+	List.Regist(this);
 }
 
 CAudience::~CAudience()
 {
+	List.Delete(this);
 }
 
 //====================================
@@ -39,6 +44,7 @@ HRESULT CAudience::Init(void)
 	m_pModel = CObjectX::Create("data\\MODEL\\Audience.x",VECTO3ZERO);
 	m_state = STATE_NEUTRAL;
 	m_pOrbit = COrbit::Create(60, D3DXCOLOR(0.7f, 1.0f, 0.3f, 1.0f), D3DXVECTOR3(1.0f, 0.0f, 0.0f), D3DXVECTOR3(-1.0f, 0.0f, 0.0f), GetMatrixAddress());
+	m_pOrbit2 = COrbit::Create(60, D3DXCOLOR(0.7f, 1.0f, 0.3f, 1.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), GetMatrixAddress());
 	return S_OK;
 }
 //====================================
@@ -55,6 +61,11 @@ void CAudience::Uninit(void)
 	{
 		m_pOrbit->Uninit();
 		m_pOrbit = NULL;
+	}
+	if (m_pOrbit2 != NULL)
+	{
+		m_pOrbit2->Uninit();
+		m_pOrbit2 = NULL;
 	}
 }
 //====================================
@@ -133,23 +144,95 @@ void CAudience::Draw(void)
 //====================================
 void CAudience::Attack()
 {
-	m_nStateCount++;
-	if (m_nStateCount % 120 == 0)
+	m_nStateCount--;
+	switch (m_state)
 	{
-		CEnemy * pEnemy = NULL;
-		int nNum = CEnemy::EnemyList.GetNum();
-		if (nNum > 0)
+	case CAudience::STATE_NONE:
+		break;
+	case CAudience::STATE_NEUTRAL:
+		break;
+	case CAudience::STATE_AUTOATTACK:
+		if (m_nStateCount % 60 == 0)
 		{
-			int nTarget = rand() % nNum;
-			pEnemy = CEnemy::EnemyList.Get(nTarget);
+			CEnemy * pEnemy = NULL;
+			int nNum = CEnemy::EnemyList.GetNum();
+			if (nNum > 0)
+			{
+				int nTarget = rand() % nNum;
+				pEnemy = CEnemy::EnemyList.Get(nTarget);
+			}
+			if (pEnemy != NULL)
+			{
+				D3DXVECTOR3 Vec = pEnemy->GetPos() - GetPos();
+				D3DXVec3Normalize(&Vec, &Vec);
+				CBullet::Create(GetPos(), Vec * 10.0f, 60, CBullet::TYPE_PLAYER);
+			}
 		}
-		if (pEnemy != NULL)
+		break;
+	case CAudience::STATE_MANUALATTACK:
+		if (m_nStateCount % 6 == 0)
 		{
-			D3DXVECTOR3 Vec = pEnemy->GetPos() - GetPos();
-			D3DXVec3Normalize(&Vec, &Vec);
-			CBullet::Create(GetPos(), Vec * 10.0f, 60, CBullet::TYPE_PLAYER);
+			CEnemy * pEnemy = NULL;
+			int nNum = CEnemy::EnemyList.GetNum();
+			if (nNum > 0)
+			{
+				int nTarget = rand() % nNum;
+				pEnemy = CEnemy::EnemyList.Get(nTarget);
+			}
+			if (pEnemy != NULL)
+			{
+				CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+				if (pPlayer != NULL)
+				{
+					if (pPlayer->GetTarget() != NULL)
+					{
+						D3DXVECTOR3 Vec = { (rand() % 1000 - 500) *0.1f,(rand() % 1000 - 500) *0.1f,(rand() % 1000 - 500) *0.1f };
+						D3DXVec3Normalize(&Vec, &Vec);
+						CMissile::Create(GetPos(), Vec, 60, CBullet::TYPE_PLAYER, 10.0f, 0.1f, pPlayer->GetTarget());
+					}
+					else
+					{
+						D3DXVECTOR3 Vec = pEnemy->GetPos() - GetPos();
+						D3DXVec3Normalize(&Vec, &Vec);
+						CBullet::Create(GetPos(), Vec * 20.0f, 60, CBullet::TYPE_PLAYER);
+					}
+				}
+			
+			}
+		}
+		break;
+	case CAudience::STATE_DEATH:
+		break;
+	case CAudience::STATE_MAX:
+		break;
+	default:
+		break;
+	}
+	if (m_nStateCount <= 0)
+	{
+		m_nStateCount = 0;
+		switch (m_state)
+		{
+		case CAudience::STATE_NONE:
+			break;
+		case CAudience::STATE_NEUTRAL:
+			SetState(STATE_AUTOATTACK, 300);
+			break;
+		case CAudience::STATE_AUTOATTACK:
+			SetState(STATE_NEUTRAL, 60);
+			break;
+		case CAudience::STATE_MANUALATTACK:
+			SetState(STATE_NEUTRAL, 60);
+			break;
+		case CAudience::STATE_DEATH:
+			break;
+		case CAudience::STATE_MAX:
+			break;
+		default:
+			break;
 		}
 	}
+	
 }
 //====================================
 //生成
@@ -159,4 +242,11 @@ CAudience * CAudience::Create(void)
 	CAudience * pAudience = DBG_NEW CAudience;
 	pAudience->Init();
 	return pAudience;
+}
+void CAudience::SetStateAll(STATE state, int nCnt) 
+{
+	int nSize = List.GetNum(); for (int i = 0; i < nSize; i++)
+	{
+		List.Get(i)->SetState(state, nCnt);
+	}
 }

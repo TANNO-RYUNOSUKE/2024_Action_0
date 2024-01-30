@@ -27,7 +27,7 @@
 #include "model.h"
 #include "Supporter.h"
 #include "meshfield.h"
-
+#include "audience.h"
 //ƒ}ƒNƒ’è‹`
 #define MOVE_PLAYER (2.0f)
 #define DASH_PLAYER (35.0f)
@@ -95,6 +95,11 @@ void CPlayer::Uninit()
 	{
 		m_pOrbit->Release();
 		m_pOrbit = NULL;
+	}
+	if (m_pEnemy != NULL)
+	{
+		delete m_pEnemy;
+		m_pEnemy = NULL;
 	}
 	for (int nCnt = 0; nCnt < NUM_MODEL; nCnt++)
 	{
@@ -268,6 +273,7 @@ void CPlayer::Action()
 			m_Size = 0.0f;
 			DeletCollision();
 			m_bKey = true;
+			CAudience::SetStateAll(CAudience::STATE_MANUALATTACK, 30);
 			if (m_pMotion->GetType() < MOTION_COMBINATION1)
 			{
 				m_pMotion->SetType(MOTION_COMBINATION1);
@@ -663,6 +669,44 @@ void CPlayer::Direction()
 
 			m_rotDest.y = atan2f(-vec.x, -vec.z);
 		}
+		else
+		{
+			float fDistance = FLT_MAX;
+			float fDistancecheck = 0.0f;
+			int nSize = CEnemy::EnemyList.GetNum();
+			CEnemy * pEnemy = NULL;
+			CEnemy * pEnemyCross = NULL;
+			for (int i = 0; i < nSize; i++)
+			{
+				pEnemy = CEnemy::EnemyList.Get(i);
+				if (pEnemy != NULL)
+				{
+					fDistancecheck = GetDistance(pEnemy->GetPos() - pCamera->GetPosV());
+					if (500.0f > fDistancecheck)
+					{
+						if (fDistance > fDistancecheck)
+						{
+							fDistance = fDistancecheck;
+							pEnemyCross = pEnemy;
+						}
+					}
+				}
+			}
+			if (pEnemyCross != NULL)
+			{
+				vec = pEnemyCross->GetPos() - GetPos();
+				float move =(atan2f(-vec.x, -vec.z) - m_rotDest.y) *0.1f;
+				if (move < -D3DX_PI)
+				{
+					move += D3DX_PI * 2;
+				}
+				else if (move > D3DX_PI)
+				{
+					move += -D3DX_PI * 2;
+				}
+				m_rotDest.y = m_rotDest.y + move;	
+			}
+		}
 	}
 	else
 	{
@@ -685,46 +729,71 @@ void CPlayer::Mirage()
 void CPlayer::Lockon()
 {
 	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
-	if (*m_pEnemy == NULL)
-	{
+
+	
 	
 		int nSize = CEnemy::EnemyList.GetNum();
 		float fAngle = FLT_MAX;
+		float fDistance = FLT_MAX;
+		float fDistancecheck = 0.0f;
 		float fAngleCheck = 0.0f;
 		CEnemy * pEnemy = NULL;
-
+		CEnemy * pEnemyOld = *m_pEnemy;
+		D3DXVECTOR3 PosOld = m_pTarget->GetPos();
+		*m_pEnemy = NULL;
 		for (int i = 0; i < nSize; i++)
 		{
 			pEnemy = CEnemy::EnemyList.Get(i);
 			if (pEnemy != NULL)
 			{
+				if (pEnemyOld == pEnemy)
+				{
+					*m_pEnemy = pEnemy;
+					m_pTarget->SetPos(PosOld);
+					break;
+				}
 				fAngleCheck = ComparisonAngle(-pCamera->GetVec(), pEnemy->GetPos() - pCamera->GetPosV());
 				if (fAngleCheck < 45.0f)
 				{
 					if (fAngle > fAngleCheck)
 					{
-						fAngle = fAngleCheck;
-						*m_pEnemy = pEnemy;
-						m_pTarget->SetPos((*m_pEnemy)->GetPos());
+						fDistancecheck = GetDistance(pEnemy->GetPos() - pCamera->GetPosV());
+						if (fDistance > fDistancecheck &&1500.0f > fDistancecheck)
+						{
+							fDistance = fDistancecheck;
+							fAngle = fAngleCheck;
+							*m_pEnemy = pEnemy;
+							m_pTarget->SetPos((*m_pEnemy)->GetPos());
+						}
+					
 					}
 				}
 			}
 		}
-	}
-	else
+	
+	if (*m_pEnemy != NULL)
 	{
-		
+	
 		D3DXVECTOR3 pos = (*m_pEnemy)->GetPos();
 		pos.y += 50.0f;
-		pCamera->SetRDest((GetPos()+ pos) * 0.5f);
-		float fLength = CManager::GetInstance()->GetDistance((GetPos() + pos)) *0.5f;
+	
+		float fLength = CManager::GetInstance()->GetDistance((D3DXVECTOR3(GetPos().x,0.0f, GetPos().z) - D3DXVECTOR3(pos.x, 0.0f, pos.z))) * 0.5f;
 		if (fLength < 300.0f)
 		{
 			fLength = 300.0f;
 		}
 		D3DXVECTOR3 vec = pos - GetPos();
-		pCamera->SetLenght(fLength);
-		pCamera->SetRot(D3DXVECTOR3(atan2f(-vec.y, -vec.z) + 0.5f, atan2f(-vec.x, -vec.z),0.0f));
+		if (m_pMotion->GetType() < MOTION_COMBINATION1)
+		{
+			pCamera->SetRDest((GetPos() + pos) * 0.5f);
+			pCamera->SetLenght(fLength);
+			//pCamera->SetRotDest(pCamera->GetRotDest() + (D3DXVECTOR3(0.0f, atan2f(-vec.x, -vec.z) - 0.2f, pCamera->GetRotDest().z) - pCamera->GetRotDest()) * 0.1f);
+		}
+		else
+		{
+			pCamera->SetRDest((GetPos() + pos) * 0.5f);
+		}
+	
 		m_pTarget->SetHeight(m_pTarget->GetHeight() + (50.0f - m_pTarget->GetHeight()) * 0.2f);
 		m_pTarget->SetWidth(m_pTarget->GetWidth() + (50.0f - m_pTarget->GetWidth()) * 0.2f);
 		m_pTarget->SetColor(m_pTarget->GetColor() + (D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f) - m_pTarget->GetColor()) * 0.2f);

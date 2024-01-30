@@ -5,5 +5,5 @@
 D3DXVECTOR3 VectorToAngles(const D3DXVECTOR3& vector);
 D3DXVECTOR3 AnglesToVector(const D3DXVECTOR3& angles);
 float ComparisonAngle(const D3DXVECTOR3& Direction1, const D3DXVECTOR3& Direction2);
-
+float GetDistance(D3DXVECTOR3 vec);
 #endif

@@ -15,6 +15,7 @@
 #include "animbillboard.h"
 #include "sound.h"
 #include "player.h"
+#include "camera.h"
 
 Clist<CEnemy *> CEnemy::EnemyList = {};
 //=============================================
@@ -81,6 +82,7 @@ void CEnemy::Uninit()
 //=============================================
 void CEnemy::Update()
 {
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
 	SetPos(GetPos() + GetMove());
 	SetMove(GetMove()*0.9f);
 	m_nStateCount--;
@@ -107,6 +109,7 @@ void CEnemy::Update()
 			pos.y += 50.0f;
  			CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
 			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
+			pCamera->SetShake(5);
 			Release();
 			break;
 		default:

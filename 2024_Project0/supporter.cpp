@@ -52,3 +52,24 @@ float ComparisonAngle(const D3DXVECTOR3& Direction1, const D3DXVECTOR3& Directio
 	// ラジアンから度数法に変換して返す
 	return fAnswer;
 }
+
+//=============================================
+//距離取得関数
+//=============================================
+float GetDistance(D3DXVECTOR3 vec)
+{
+	if (vec.x < 0.0f)
+	{
+		vec.x *= -1.0f;
+	}
+	if (vec.y < 0.0f)
+	{
+		vec.y *= -1.0f;
+	}
+	if (vec.z < 0.0f)
+	{
+		vec.z *= -1.0f;
+	}
+	float fDis = vec.x + vec.y + vec.z;
+	return fDis;
+}

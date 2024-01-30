@@ -2,6 +2,7 @@
 #include "manager.h"
 #include "animbillboard.h"
 #include "sound.h"
+#include "camera.h"
 Clist<CSphereCollision *> CSphereCollision::List = {};
 CSphereCollision::CSphereCollision()
 {
@@ -15,7 +16,7 @@ CSphereCollision::~CSphereCollision()
 
 void CSphereCollision::Collision()
 {
-
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
 	D3DXMATRIX MtxOffset;
 	//ワールドマトリクスの初期化
 	D3DXMatrixIdentity(&MtxOffset);
@@ -44,6 +45,8 @@ void CSphereCollision::Collision()
 				{
 					if (pCollision->m_pParent->Damage(m_nPower, m_knockback))
 					{
+						pCamera->SetShake(3);
+						CManager::GetInstance()->SetHitStop(3);
 						CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHHIT);
 						CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false, (pCollision->m_Pos + m_Pos)*0.5f + m_knockback, "data\\TEXTURE\\HitEffect.png");
 					}
@@ -59,13 +62,13 @@ void CSphereCollision::Collision()
 			{
 				if (CManager::GetInstance()->GetDistance(pCollision->m_Pos - m_Pos) <= (m_fRadius + pCollision->m_fRadius))
 				{
-					if (pCollision->m_pParent->Damage(m_nPower, m_knockback))
-					{
-						CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SHOT);
-						CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false,  m_Pos + m_knockback, "data\\TEXTURE\\HitEffect2.png");
-						m_pParent->SetLife(0);
-						return;
-					}
+					pCollision->m_pParent->SetLife(pCollision->m_pParent->GetLife() - m_nPower);
+
+					CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SHOT);
+					CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false, m_Pos + m_knockback, "data\\TEXTURE\\HitEffect2.png");
+					m_pParent->SetLife(0);
+					return;
+
 				}
 			}
 		}

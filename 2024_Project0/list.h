@@ -13,6 +13,7 @@ public:
 	~Clist() { delete list; list = NULL; };
 	void Regist(T data) { list->push_back(data); }
 	void Delete(T data) { if (!list->empty()) { list->erase(std::find(list->begin(), list->end(), data)); } }
+	T Find(T data) { if (!list->empty()) { return *std::find(list->begin(), list->end(), data); } else { return NULL; } }
 	void Clear() { list->clear(); }
 	
 	std::list<T> * GetList() { return list; }

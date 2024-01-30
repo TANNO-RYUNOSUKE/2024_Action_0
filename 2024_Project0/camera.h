@@ -20,6 +20,7 @@ public:
 
 
 	void SetRDest(D3DXVECTOR3 pos) { m_posRdest = pos; }
+	D3DXVECTOR3 GetRDest(void) { return m_posRdest; }
 	void SetVDest(D3DXVECTOR3 pos) { m_posVdest = pos; }
 	void SetShake(int nCnt) { nCntShake = nCnt; }
 	int GetShake(void) { return nCntShake; }
@@ -27,7 +28,9 @@ public:
 	float GetLenght(void) { return m_fLengthCamera; }
 	void SetDirection(bool bDirection) { m_bDirection = bDirection; }
 	D3DXVECTOR3 GetRot() { return m_rot; }//Œü‚«‚ÌŽæ“¾
+	D3DXVECTOR3 GetRotDest() { return m_rotDest; }//Œü‚«‚ÌŽæ“¾
 	void SetRot(D3DXVECTOR3 rot) { m_rot = rot; }
+	void SetRotDest(D3DXVECTOR3 rot) { m_rotDest = rot; }
 	D3DXVECTOR3 GetVec(void) { return m_vecCamera; }
 	D3DXVECTOR3 GetPosV(void) { return m_posV; }
 private:

@@ -157,21 +157,23 @@ void COrbit::Update(void)
 	pDevice = pRenderer->GetDevice();
 	m_posOld = m_pos;
 	D3DXMATRIX MtxOffset1, MtxOffset2;
-
-
-
-	//ワールドマトリクスの初期化
-	D3DXMatrixIdentity(&MtxOffset1);
-	D3DXMatrixIdentity(&MtxOffset2);
-
-	D3DXMatrixTranslation(&MtxOffset1, m_Offset1.x, m_Offset1.y, m_Offset1.z);
-	D3DXMatrixTranslation(&MtxOffset2, m_Offset2.x, m_Offset2.y, m_Offset2.z);
-	D3DXMatrixMultiply(&MtxOffset1, &MtxOffset1, m_pMtx);
-	D3DXMatrixMultiply(&MtxOffset2, &MtxOffset2, m_pMtx);
 	D3DXVECTOR3 Pos1, Pos2;
-	Pos1 = D3DXVECTOR3(MtxOffset1._41, MtxOffset1._42, MtxOffset1._43);
-	Pos2 = D3DXVECTOR3(MtxOffset2._41, MtxOffset2._42, MtxOffset2._43);
-	m_pos = (Pos1 + Pos2)*0.5f;
+
+	if (m_bEnd != true)
+	{
+		//ワールドマトリクスの初期化
+		D3DXMatrixIdentity(&MtxOffset1);
+		D3DXMatrixIdentity(&MtxOffset2);
+
+		D3DXMatrixTranslation(&MtxOffset1, m_Offset1.x, m_Offset1.y, m_Offset1.z);
+		D3DXMatrixTranslation(&MtxOffset2, m_Offset2.x, m_Offset2.y, m_Offset2.z);
+		D3DXMatrixMultiply(&MtxOffset1, &MtxOffset1, m_pMtx);
+		D3DXMatrixMultiply(&MtxOffset2, &MtxOffset2, m_pMtx);
+
+		Pos1 = D3DXVECTOR3(MtxOffset1._41, MtxOffset1._42, MtxOffset1._43);
+		Pos2 = D3DXVECTOR3(MtxOffset2._41, MtxOffset2._42, MtxOffset2._43);
+		m_pos = (Pos1 + Pos2)*0.5f;
+	};
 	m_pVtxBuff->Lock(0, 0, (void**)&pVtx, 0);
 	if (m_bDisp == true)
 	{
@@ -182,6 +184,7 @@ void COrbit::Update(void)
 			{
 				if (!m_bEnd)
 				{
+
 					pVtx[nCnt].pos = Pos1;
 					pVtx[nCnt + 1].pos = Pos2;
 				}

@@ -23,20 +23,41 @@ public:
 		TYPE_ENEMY,
 		TYPE_MAX
 	};
+	virtual HRESULT Init(void);
+	virtual void Uninit(void);
+	virtual void Update(void);
+	virtual void Draw(void);
+
+	static CBullet * Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, int nLife, TYPE type);
+	void SetLife(int nLife) { m_nLife = nLife; }
+protected:
+	TYPE m_Type;
+private:
+
+	CSphereCollision * m_pColl;
+	COrbit * m_pOrbit;
+	COrbit * m_pOrbit2;
+	CObject * m_pTarget;
+	int m_nLife;//Žõ–½
+
+};
+
+class CMissile : public CBullet
+{
+public:
+	CMissile();
+	~CMissile();
 	HRESULT Init(void);
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
-
-	static CBullet * Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, int nLife,TYPE type);
-
-
+	static CMissile * Create(D3DXVECTOR3 pos, D3DXVECTOR3 vec, int nLife, TYPE type,float fSpeed,float fPower,CObject * Target);
+	void Homing();
 private:
-	TYPE m_Type;
-	CSphereCollision * m_pColl;
-	COrbit * m_pOrbit;
-	int m_nLife;//Žõ–½
-
+	float m_fSpeed; 
+	float m_fPower;
+	CObject ** m_pTarget;
 };
+
 
 #endif // ! _BULLET_H_

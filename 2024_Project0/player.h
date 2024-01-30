@@ -69,7 +69,7 @@ public:
 	int GetLife() { return m_nLife; }
 
 	CModel * GetModel(int nData = 0) { return m_apModel[nData]; }
-
+	CEnemy * GetTarget() { return *m_pEnemy; }
 	//ƒ‚[ƒVƒ‡ƒ“Œn
 	void Action();
 

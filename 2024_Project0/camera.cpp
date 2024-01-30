@@ -116,9 +116,17 @@ void CCamera::Update()
 	{
 		RotMove.y += -D3DX_PI * 2;;
 	}
-	if (RotMove.y < -D3DX_PI)
+	else if (RotMove.y < -D3DX_PI)
 	{
 		RotMove.y += D3DX_PI * 2;
+	}
+	if (RotMove.z > D3DX_PI)
+	{
+		RotMove.z += -D3DX_PI * 2;;
+	}
+	else if (RotMove.z < -D3DX_PI)
+	{
+		RotMove.z += D3DX_PI * 2;
 	}
 	if (m_rotDest.z > 3.14f / 3)
 	{

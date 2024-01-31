@@ -73,3 +73,21 @@ float GetDistance(D3DXVECTOR3 vec)
 	float fDis = vec.x + vec.y + vec.z;
 	return fDis;
 }
+
+float GetAngleDifference(const D3DXVECTOR3& vec1, const D3DXVECTOR3& vec2)
+{
+	// ベクトルを正規化します。
+	D3DXVECTOR3 v1, v2;
+	D3DXVec3Normalize(&v1, &vec1);
+	D3DXVec3Normalize(&v2, &vec2);
+
+	// ドット積を計算して、角度を求めます。
+	float dotProduct = D3DXVec3Dot(&v1, &v2);
+	float angle = acosf(dotProduct);
+	if (angle < 0.0f)
+	{
+		angle *= -1.0f;
+	}
+	// 角度の差を返します。
+	return angle;
+}

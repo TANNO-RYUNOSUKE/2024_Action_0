@@ -63,6 +63,7 @@ CPlayer::~CPlayer()
 //=============================================
 HRESULT CPlayer::Init()
 {
+	m_nLand = 0;
 	m_pTarget = CBillboard::Create(50.0f, 50.0f, GetPos(), "data\\TEXTURE\\target.png");
 	m_nLife = 5;
 	m_pEnemy = DBG_NEW CEnemy*;
@@ -143,8 +144,12 @@ void CPlayer::Update()
 	
 	Action();
 	
+
 	SetPos(GetPos() + GetMove());
-	SetMove(GetMove() * 0.9f);
+	D3DXVECTOR3 move = GetMove();
+	move.x *= 0.9f;
+	move.z *= 0.9f;
+	SetMove(move);
 	D3DXVECTOR3 animRot = D3DXVECTOR3(0.0f,  ((m_rotDest.y - GetRot().y)), 0.0f);
 	if (animRot.y< -D3DX_PI)
 	{
@@ -159,15 +164,18 @@ void CPlayer::Update()
 	if (pMesh != NULL)
 	{
 		D3DXVECTOR3 move = GetMove();
+		move.y -= GRAVITY;
+		m_nLand--;
 		if (pMesh->Collision(GetPosAddress()))
 		{
 			
 				move.y = 0.0f;
 				m_bLand = true;
+				m_nLand = 3;
 		}
 		else
 		{
-			move.y -= GRAVITY;
+			
 			m_bLand = false;
 		}
 		SetMove(move);
@@ -236,7 +244,7 @@ void CPlayer::Action()
 	{
 		m_bMotionLock = false;
 
-		m_bKey = false;
+	//	m_bKey = false;
 		DeletCollision();
 		if (m_pOrbit != NULL)
 		{
@@ -244,12 +252,12 @@ void CPlayer::Action()
 			m_pOrbit = NULL;
 		}
 	}
-	if (!m_bMotionLock && m_pMotion->GetType() < MOTION_COMBINATION1)
+	if (!m_bMotionLock && m_pMotion->GetType() < MOTION_JUMP && m_nLand > 0)
 	{
 		CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
 		D3DXVECTOR3 vec = pInputGamePad->GetStickL(0,0.1f);
 
-		if (CManager::GetInstance()->GetDistance(vec) <= 0.9f || pInputKeyboard->GetPress(DIK_LSHIFT))
+		if (CManager::GetInstance()->GetDistance(vec) <= 0.9f || pInputKeyboard->GetPress(DIK_LSHIFT) || *m_pEnemy != NULL)
 		{
 			Walk();
 		}
@@ -259,6 +267,7 @@ void CPlayer::Action()
 		}
 		
 	}
+
 	if (!m_bMotionLock)
 	{
 		if (pInputMouse->GetTrigger(pInputMouse->MOUSE_LEFT) || pInputGamePad->GetTrigger(CInputGamePad::Button_Y,0))
@@ -285,8 +294,18 @@ void CPlayer::Action()
 			}
 		}
 	}
+	if (!m_bMotionLock  && pInputGamePad->GetTrigger(CInputGamePad::Button_A, 0))
+	{
+		m_bKey = true;
+		m_pMotion->SetType(MOTION_JUMP);
+	}
+	
+	Command();
 	switch (m_pMotion->GetType())
 	{
+	case MOTION_JUMP:
+		Jump();
+		break;
 	case MOTION_COMBINATION1:
 		Attack1();
 		break;
@@ -299,8 +318,88 @@ void CPlayer::Action()
 	case MOTION_COMBINATION4:
 		Attack4();
 		break;
+	case MOTION_CHARGE:
+		Charge();
+		break;
+	case MOTION_STREAK:
+		Streak();
+		break;
+	case MOTION_HIGHROLLER:
+		Highroller();
+		break;
+	case MOTION_SPLIT:
+		Split();
+		break;
 	}
 
+}
+void  CPlayer::Command()
+{
+	if (*m_pEnemy != NULL && !m_bMotionLock)
+	{
+			CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+			D3DXVECTOR3 rot;
+		
+		CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+		D3DXVECTOR3 Vec = (*m_pEnemy)->GetPos() - GetPos();
+		Vec.y = 0.0f;
+		D3DXVECTOR3 Stick = VECTO3ZERO;
+		Stick.x = pInputGamePad->GetStickL(0,0.5f).x;
+		Stick.z = -pInputGamePad->GetStickL(0, 0.5f).y;
+		if (Stick != VECTO3ZERO)
+		{
+
+			if (pCamera != NULL)
+			{
+				rot = pCamera->GetRot();
+
+				D3DXMATRIX RotMtx;
+				D3DXMatrixIdentity((&RotMtx));
+				D3DXMatrixRotationY(&RotMtx, rot.y);
+				D3DXVec3TransformCoord(&Stick, &Stick, &RotMtx);
+				Stick *= -1;
+				//Œü‚«‚ð”½‰f
+
+			}
+
+			if (GetAngleDifference(Vec, Stick) <= D3DX_PI * 0.5f &&  pInputGamePad->GetTrigger(CInputGamePad::Button_Y, 0) && m_nLand > 0)
+			{
+				Direction();
+				m_pMotion->SetType(MOTION_CHARGE);
+			}
+			if (GetAngleDifference(Vec, -Stick) <= D3DX_PI * 0.5f &&  pInputGamePad->GetTrigger(CInputGamePad::Button_Y, 0) && m_nLand > 0)
+			{
+				Direction();
+				m_pMotion->SetType(MOTION_HIGHROLLER);
+			}
+			if (GetAngleDifference(Vec, -Stick) <= D3DX_PI * 0.5f &&  pInputGamePad->GetTrigger(CInputGamePad::Button_Y, 0) && m_nLand <= 0)
+			{
+				Direction();
+				m_pMotion->SetType(MOTION_SPLIT);
+			}
+		}
+	}
+}
+void  CPlayer::Charge()
+{
+	if (*m_pEnemy != NULL )
+	{
+		D3DXVECTOR3 Vec = (*m_pEnemy)->GetPos() - GetPos();
+		Vec.y = 0.0f;
+		m_bMotionLock = true;
+		if (GetDistance(Vec) < 300.0f)
+		{
+			m_bKey = true;
+			m_pMotion->SetType(MOTION_STREAK);
+		}
+		D3DXVec3Normalize(&Vec, &Vec);
+		SetMove(Vec * 15.0f);
+		Mirage();
+	}
+	else
+	{
+		m_pMotion->SetType(MOTION_STREAK);
+	}
 }
 void CPlayer::Walk()
 {
@@ -430,6 +529,72 @@ void CPlayer::Dash()
 		m_pMotion->SetType(MOTION_NEUTRAL);
 	}
 }
+void CPlayer::Jump()
+{
+	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
+	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	D3DXVECTOR3 vec = VECTO3ZERO;
+	D3DXVECTOR3 rot = VECTO3ZERO;
+	if (pInputKeyboard->GetPress(DIK_W) || pInputKeyboard->GetPress(DIK_A) || pInputKeyboard->GetPress(DIK_S) || pInputKeyboard->GetPress(DIK_D))
+	{
+		if (pInputKeyboard->GetPress(DIK_W))
+		{
+			vec.z += 1.0f;
+		}
+		if (pInputKeyboard->GetPress(DIK_A))
+		{
+			vec.x -= 1.0f;
+		}
+		if (pInputKeyboard->GetPress(DIK_S))
+		{
+			vec.z -= 1.0f;
+		}
+		if (pInputKeyboard->GetPress(DIK_D))
+		{
+			vec.x += 1.0f;
+		}
+
+	}
+	else
+	{
+		vec.x = pInputGamePad->GetStickL(0, 0.01f).x;
+		vec.z = -pInputGamePad->GetStickL(0, 0.01f).y;
+	}
+	if (vec != VECTO3ZERO)
+	{
+		D3DXVec3Normalize(&vec, &vec);
+		if (pCamera != NULL)
+		{
+			rot = pCamera->GetRot();
+
+			D3DXMATRIX RotMtx;
+			D3DXMatrixIdentity((&RotMtx));
+			D3DXMatrixRotationY(&RotMtx, rot.y);
+			D3DXVec3TransformCoord(&vec, &vec, &RotMtx);
+			vec *= -1;
+			//Œü‚«‚ð”½‰f
+
+		}
+	
+			SetMove(GetMove() + vec*DASH_SPEED * 0.5f);
+	
+		m_rotDest.y = atan2f(-vec.x, -vec.z);
+
+	}
+	if (m_bKey && m_pMotion->GetKey() == 2)
+	{
+		m_bKey = false;
+		
+			SetMove(D3DXVECTOR3(GetMove().x, +10.0f, GetMove().z));
+		
+		
+	}
+	if (m_pMotion->GetKey() == 2 && m_bLand)
+	{
+		m_pMotion->SetType(MOTION_NEUTRAL);
+	}
+}
 void CPlayer::Attack1()
 {
 	m_nDamage = 5;
@@ -470,13 +635,18 @@ void CPlayer::Attack1()
 	{
 		m_bKey = false;
 		SetMove(GetMove() + AnglesToVector(GetRot()) * -7.0f);
+		if (m_nLand <= 0)
+		{
+			SetMove(D3DXVECTOR3(GetMove().x, +5.0f, GetMove().z));
+			
+		}
 	}
 	
 }
 void CPlayer::Attack2()
 {
 	m_nDamage = 8;
-	m_fPower = 10.0f;
+	m_fPower = 5.0f;
 	m_Size = 2.0f;
 	Direction();
 	if (m_pMotion->GetKey() == 2)
@@ -511,6 +681,11 @@ void CPlayer::Attack2()
 	{
 		m_bKey = false;
 		SetMove(GetMove() + AnglesToVector(GetRot()) * -7.0f);
+		if (m_nLand <= 0)
+		{
+			SetMove(D3DXVECTOR3(GetMove().x, +5.0f, GetMove().z));
+			
+		}
 	}
 }
 void CPlayer::Attack3()
@@ -551,6 +726,11 @@ void CPlayer::Attack3()
 	{
 		m_bKey = false;
 		SetMove(GetMove() + AnglesToVector(GetRot()) * -10.0f);
+		if (m_nLand <= 0)
+		{
+			SetMove(D3DXVECTOR3(GetMove().x, +5.0f, GetMove().z));
+			
+		}
 	}
 }
 void CPlayer::Attack4()
@@ -592,6 +772,164 @@ void CPlayer::Attack4()
 	{
 		m_bKey = false;
 		SetMove(GetMove() + AnglesToVector(GetRot()) * -4.0f);
+
+	}
+}
+
+void CPlayer::Streak()
+{
+	m_nDamage = 10;
+	m_fPower = 10.0f;
+	m_Size = 2.0f;
+	if (m_pMotion->GetKey() == 1)
+	{
+		if (m_pOrbit == NULL)
+		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_DESTRUCT);
+			m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -100.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
+		}
+	}
+	if (m_pMotion->GetKey() >= 4)
+	{
+		if (m_pOrbit != NULL)
+		{
+
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+	}
+	else
+	{
+		Mirage();
+	}
+	if (m_pMotion->GetKey() <= 5)
+	{
+		m_bMotionLock = true;
+	}
+	else
+	{
+		m_bMotionLock = false;
+	}
+	if (m_bKey)
+	{
+		m_bKey = false;
+		D3DXVECTOR3 move = GetMove() + AnglesToVector(GetRot()) * -10.0f;
+		move.y = 0.0f;
+		SetMove(move);
+	}
+}
+
+void CPlayer::Highroller()
+{
+	m_nDamage = 10;
+	m_fPower = 0.0f;
+	m_Size = 2.0f;
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	pCamera->SetLenght(pCamera->GetLenght() + GetMove().y  + 10.0f);
+	if (m_pColl != NULL)
+	{
+		m_pColl->SetKnockback(D3DXVECTOR3(m_pColl->GetKnockback().x, 15.0f, m_pColl->GetKnockback().z));
+	}
+
+	if (m_pMotion->GetKey() == 1)
+	{
+		if (m_pOrbit == NULL)
+		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_DESTRUCT);
+			m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -55.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
+		}
+	}
+	
+	if (m_pMotion->GetKey() >= 4)
+	{
+		if (m_pOrbit != NULL)
+		{
+		
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+	}
+	else
+	{
+		Mirage();
+	}
+	if (m_pMotion->GetKey() <= 5)
+	{
+		m_bMotionLock = true;
+	}
+	else
+	{
+		m_bMotionLock = false;
+	}
+	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+
+	if (m_bKey && m_pMotion->GetKey() == 2 && pInputGamePad->GetPress(CInputGamePad::Button_Y,0))
+	{
+		m_bKey = false;
+	
+		SetMove(D3DXVECTOR3(GetMove().x, 13.0f, GetMove().z));
+	}
+}
+void CPlayer::Split()
+{
+	m_nDamage = 10;
+	m_fPower = 5.0f;
+	m_Size = 3.0f;
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+
+	if (m_pColl != NULL)
+	{
+		m_pColl->SetKnockback(D3DXVECTOR3(m_pColl->GetKnockback().x, -10.0f, m_pColl->GetKnockback().z));
+	}
+
+	if (m_pMotion->GetKey() == 1)
+	{
+		if (m_pOrbit == NULL)
+		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
+		
+			m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -55.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
+		}
+	}
+
+	if (m_pMotion->GetKey() >= 4)
+	{
+		if (m_pOrbit != NULL)
+		{
+		
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+	}
+	else
+	{
+		Mirage();
+	}
+	if (m_pMotion->GetKey() <= 5)
+	{
+		m_bMotionLock = true;
+	}
+	else
+	{
+		m_bMotionLock = false;
+	}
+	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+
+	if (m_pMotion->GetKey() < 3)
+	{
+		pCamera->SetLenght(300.0f);
+		SetMove(D3DXVECTOR3(GetMove().x, 1.0f, GetMove().z));
+	}
+	if (m_pMotion->GetKey() == 3)
+	{
+		SetMove(D3DXVECTOR3(GetMove().x, -15.0f, GetMove().z));
+	}
+	if (m_bLand && m_pMotion->GetKey() < 4)
+	{
+		CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_DESTRUCT);
+		m_pMotion->SetkeyNumber(4);
 	}
 }
 void CPlayer::AutoCollisionCreate()
@@ -721,7 +1059,7 @@ void CPlayer::Mirage()
 	{
 		if (m_apModel[i] != NULL)
 		{
-			CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f), 60);
+		//	CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f),30);
 		}
 
 	}

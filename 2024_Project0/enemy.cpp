@@ -260,7 +260,10 @@ void CEnemy_TEST::Update()
 		SetMove(GetMove() + vec * 0.03f);		
 	}
 	SetPos(GetPos() + GetMove());
-	SetMove(GetMove()*0.9f);
+	D3DXVECTOR3 move = GetMove();
+	move.x *= 0.9f;
+	move.z *= 0.9f;
+	SetMove(move);
 }
 
 //=============================================

@@ -31,6 +31,7 @@ public:
 	static CSphereCollision * Create(TYPE type,float fRadius,int nPower, D3DXVECTOR3 Offset, D3DXVECTOR3 knockback,D3DXMATRIX * pMtx = NULL, CObject * Parent = NULL);
 	void SetRadius(float Radius) { m_fRadius = Radius; }
 	float GetRadius() { return m_fRadius; }
+	D3DXVECTOR3 GetKnockback() { return m_knockback; }
 	void SetKnockback(D3DXVECTOR3 vec) { m_knockback = vec; }
 	static Clist<CSphereCollision *> List;
 private:

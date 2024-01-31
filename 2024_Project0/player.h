@@ -15,7 +15,7 @@
 #include "billboard.h"
 #include <vector>
 //マクロ定義
-#define GRAVITY (0.8f)
+#define GRAVITY (0.4f)
 #define WALK_SPEED (0.18f)
 #define DASH_SPEED (1.0f)
 #define ENERGY_MAX (3.0f)
@@ -32,12 +32,17 @@ public:
 		MOTION_NEUTRAL,
 		MOTION_WALK,
 		MOTION_DASH,
+		MOTION_JUMP,
 		
 		MOTION_COMBINATION1,
 		MOTION_COMBINATION2,
 		MOTION_COMBINATION3,
 		MOTION_COMBINATION4,
 		
+		MOTION_CHARGE,
+		MOTION_STREAK,
+		MOTION_HIGHROLLER,
+		MOTION_SPLIT,
 		MOTION_MAX
 	}MOTION;
 
@@ -72,13 +77,18 @@ public:
 	CEnemy * GetTarget() { return *m_pEnemy; }
 	//モーション系
 	void Action();
-
+	void Command();
 	void Walk();
 	void Dash();
+	void Jump();
 	void Attack1();
 	void Attack2();
 	void Attack3();
 	void Attack4();
+	void Charge();
+	void Streak();
+	void Highroller();
+	void Split();
 	void DeletCollision();
 	void AutoCollisionCreate();
 	void Direction();
@@ -95,6 +105,7 @@ private:
 	D3DXVECTOR3 m_rotDest;
 	D3DXVECTOR3 m_rotShot; //射撃方向
 	bool m_bLand;//着地したかどうか
+	int m_nLand;
 	bool m_bMotionLock;
 	bool m_bKey;
 	CModel * m_apModel[NUM_MODEL];//使用するモデルのポインタ

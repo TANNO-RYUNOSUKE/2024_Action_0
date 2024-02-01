@@ -46,7 +46,7 @@ public:
 
 	
 	void AddLife(int nAdd) { m_nLife += nAdd; }//ライフに加算
-	bool Damage(int nDamage, D3DXVECTOR3 knockback);
+	virtual bool Damage(int nDamage, D3DXVECTOR3 knockback);
 	void SetState(STATE state, int nCnt) { m_state = state,m_nStateCount = nCnt; }
 	static Clist<CEnemy *> EnemyList;
 protected:
@@ -55,6 +55,7 @@ protected:
 	int m_nStateCount;
 	float m_fdIstance;//プレイヤーとの距離
 	int m_nLife; //体力
+	int m_nArmor;
 	D3DXVECTOR3 m_posDest;
 	D3DXVECTOR3 m_Force;
 	D3DXVECTOR3 m_rotDest;
@@ -118,15 +119,28 @@ public:
 		MOTION_DAMAGE,
 		MOTION_MAX
 	};
+	enum ROUTINE
+	{
+		ROUTINE_WAIT = 0,
+		ROUTINE_FORWARD,
+		ROUTINE_BACK,
+		ROUTINE_ATTACK,
+		ROUTINE_MAX
+	};
 	HRESULT Init(void);
 	void Uninit(void);
 	void Update(void);
 	void Draw(void);
 	void Walk();
 	void Attack();
+	bool Damage(int nDamage, D3DXVECTOR3 knockback);
 	static CEnemy_army * Create(D3DXVECTOR3 pos, int nLife);
+	void SetRoutine(ROUTINE Routine, int nCnt) { m_Routine = Routine; m_nRoutineCount = nCnt; }
 private:
-	
+	ROUTINE m_Routine;
+	COrbit * m_pOrbit;
+	int m_nRoutineCount;
+	CSphereCollision * m_pAttackCollision;
 
 };
 #endif // ! _ENEMY_H_

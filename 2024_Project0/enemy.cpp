@@ -48,7 +48,7 @@ CEnemy::~CEnemy()
 HRESULT CEnemy::Init()
 {
 	m_nStateCount = 0;
-
+	m_nArmor = m_nLife * 0.5f;
 	
 	m_pMotion = DBG_NEW  CMotion;
 	m_pMotion->SetModel(&m_apModel[0]);
@@ -183,8 +183,18 @@ bool CEnemy::Damage(int nDamage, D3DXVECTOR3 knockback)
 {
 	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD)
 	{
-		m_nLife -= nDamage;
-		SetMove(GetMove() + knockback);
+		if (m_nArmor > 0)
+		{
+			m_nLife -= nDamage * 0.5f;
+			SetMove(GetMove() + knockback * 0.5f);
+			m_nArmor -= nDamage;
+		}
+		else
+		{
+			m_nLife -= nDamage;
+			SetMove(GetMove() + knockback);
+		}
+	
 		if (m_nLife <= 0)
 		{
 			SetState(STATE_DEAD, 120);
@@ -415,13 +425,16 @@ HRESULT CEnemy_army::Init()
 	CEnemy::Init();
 	m_pMotion->Load("data\\TEXT\\motion_army.txt");
 	m_pMotion->SetType(0);
-
+	m_pOrbit = NULL;
 	m_pCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMY, 30.0f, 0, D3DXVECTOR3(0.0f, 0.0f, 0.0f), VECTO3ZERO, m_apModel[1]->GetMatrixAddress(), this);
-
+	
 	m_posDest.x = GetPos().x;
 	m_posDest.z = GetPos().z;
 	m_posDest.y = GetPos().y;
 	m_rotDest = (D3DXVECTOR3(0.0f, D3DX_PI*0.5f, 0.0f));
+
+	m_nRoutineCount = 0;
+	m_Routine = ROUTINE_WAIT;
 	return S_OK;
 }
 //=============================================
@@ -451,25 +464,56 @@ void CEnemy_army::Update()
 		}
 		else
 		{
-			move.y -= GRAVITY;
+				move.y -= GRAVITY;
 		}
 		SetMove(move);
 	}
 	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD && m_pMotion->GetType() != MOTION_DAMAGE)
 	{
 		D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
-		vec.y = 0.0f;
-		D3DXVec3Normalize(&vec, &vec);
-		SetMove(GetMove() + vec * 0.2f);
-		m_rotDest.y = atan2f(-vec.x, -vec.z);
-		SetRot(GetRot() + (m_rotDest - GetRot()) * 0.3f);
-		m_pMotion->SetType(MOTION_WALK);
+		switch (m_Routine)
+		{
+		case CEnemy_army::ROUTINE_WAIT:
+			m_pMotion->SetType(MOTION_NONE);
+			break;
+		case CEnemy_army::ROUTINE_FORWARD:
+			vec.y = 0.0f;
+			D3DXVec3Normalize(&vec, &vec);
+			SetMove(GetMove() + vec * 0.2f);
+			m_rotDest.y = atan2f(-vec.x, -vec.z);
+			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
+			m_pMotion->SetType(MOTION_WALK);
+			break;
+		case CEnemy_army::ROUTINE_BACK:
+			vec.y = 0.0f;
+			D3DXVec3Normalize(&vec, &vec);
+			SetMove(GetMove() + vec * -0.2f);
+			m_rotDest.y = atan2f(-vec.x, -vec.z);
+			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
+			m_pMotion->SetType(MOTION_WALK);
+			break;
+		case CEnemy_army::ROUTINE_ATTACK:
+			if (m_pOrbit == NULL)
+			{
+				m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 0.25f, 0.5f, 1.0f), D3DXVECTOR3(-1.5f, 10.0f, -75.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
+			}
+		
+			vec.y = 0.0f;
+			D3DXVec3Normalize(&vec, &vec);
+			
+			m_rotDest.y = atan2f(-vec.x, -vec.z);
+			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
+			m_pMotion->SetType(MOTION_ATTACK);
+			break;
+		case CEnemy_army::ROUTINE_MAX:
+			break;
+		default:
+			break;
+		}
+
+
 	}
-	else
-	{
-		m_rotDest.y = atan2f(-GetMove().x, -GetMove().z);
-		m_pMotion->SetType(MOTION_DAMAGE);
-	}
+
 	SetPos(GetPos() + GetMove());
 	D3DXVECTOR3 move = GetMove();
 	if (m_pMotion->GetType() != MOTION_DAMAGE)
@@ -481,7 +525,16 @@ void CEnemy_army::Update()
 	SetMove(move);
 
 	m_pMotion->Update();
-
+	m_nRoutineCount--;
+	if (m_nRoutineCount <= 0 && m_pMotion->GetType() != MOTION_ATTACK)
+	{
+		SetRoutine((ROUTINE)(rand() % ROUTINE_MAX), rand()%120+ 30);
+		if (m_pOrbit != NULL)
+		{
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+	}
 	CEnemy::Update();
 }
 
@@ -491,6 +544,23 @@ void CEnemy_army::Update()
 void CEnemy_army::Draw()
 {
 	CEnemy::Draw();
+}
+bool CEnemy_army::Damage(int nDamage, D3DXVECTOR3 knockback)
+{
+	
+	if (CEnemy::Damage(nDamage, knockback))
+	{
+		if (m_nArmor <= 0)
+		{
+			m_rotDest.y = atan2f(-GetMove().x, -GetMove().z);
+			m_pMotion->SetType(MOTION_DAMAGE);
+			m_pMotion->SetkeyNumber(0);
+		}
+		
+		return true;
+	}
+	return false;
+
 }
 //=============================================
 //ê∂ê¨ä÷êî

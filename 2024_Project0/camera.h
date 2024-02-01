@@ -33,6 +33,8 @@ public:
 	void SetRotDest(D3DXVECTOR3 rot) { m_rotDest = rot; }
 	D3DXVECTOR3 GetVec(void) { return m_vecCamera; }
 	D3DXVECTOR3 GetPosV(void) { return m_posV; }
+	D3DXMATRIX m_mtxProjection;	//プロジェクションマトリクス
+	D3DXMATRIX m_mtxView;		//ビューマトリクス
 private:
 	D3DXVECTOR3 m_posV;			//視点
 	D3DXVECTOR3 m_posR;			//注視点
@@ -44,8 +46,7 @@ private:
 	D3DXVECTOR3 m_rotDest;		//向き目標
 	D3DXVECTOR3 m_moveV;		//視点の移動速度
 	D3DXVECTOR3 m_moveR;		//注視点の移動速度
-	D3DXMATRIX m_mtxProjection;	//プロジェクションマトリクス
-	D3DXMATRIX m_mtxView;		//ビューマトリクス
+	
 	float m_fLengthCamera; //カメラの距離
 	D3DXVECTOR3 m_rotOld;
 	int nCntShake;

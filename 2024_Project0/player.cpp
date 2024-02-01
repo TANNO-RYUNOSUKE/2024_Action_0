@@ -28,6 +28,7 @@
 #include "Supporter.h"
 #include "meshfield.h"
 #include "audience.h"
+
 //マクロ定義
 #define MOVE_PLAYER (2.0f)
 #define DASH_PLAYER (35.0f)
@@ -78,6 +79,7 @@ HRESULT CPlayer::Init()
 	m_nDamage = 0;
 	m_fPower = 0.0f;
 	m_Size = 0.0f;
+
 	return S_OK;
 }
 //=============================================
@@ -1111,20 +1113,40 @@ void CPlayer::Lockon()
 	
 	if (*m_pEnemy != NULL)
 	{
-	
+		//敵とプレイヤーの座標をスクリーン座標に変換し、カメラの位置を決める
+		CRenderer * pRenderer = CManager::GetInstance()->GetRenderer();
+		LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
+		pDevice = pRenderer->GetDevice();
+		D3DXVECTOR3 EnemyPos = (*m_pEnemy)->GetPos();
+		D3DXVECTOR3 PrayerPos = GetPos();
+		EnemyPos += (*m_pEnemy)->GetModel()->GetPos();
+		PrayerPos += m_apModel[0]->GetPos();
+		D3DXVECTOR3 screenPosEnemy;
+		D3DXVECTOR3 screenPosPlayer;
+		D3DXMATRIX viewMatrix;
+		D3DXMATRIX worldMtx;
+		D3DXMatrixIdentity(&worldMtx);
+		pDevice->GetTransform(D3DTS_VIEW, &viewMatrix);
+		D3DVIEWPORT9 viewport;
+		pDevice->GetViewport(&viewport);
+		D3DXVec3Project(&screenPosEnemy, &EnemyPos, &viewport, &pCamera->m_mtxProjection,&pCamera->m_mtxView, &worldMtx);
+		D3DXVec3Project(&screenPosPlayer, &PrayerPos, &viewport, &pCamera->m_mtxProjection, &pCamera->m_mtxView, &worldMtx);
 		D3DXVECTOR3 pos = (*m_pEnemy)->GetPos();
 		pos.y += 50.0f;
 	
-		float fLength = CManager::GetInstance()->GetDistance((D3DXVECTOR3(GetPos().x,0.0f, GetPos().z) - D3DXVECTOR3(pos.x, 0.0f, pos.z))) * 0.5f;
-		if (fLength < 300.0f)
+		D3DXVECTOR3 CameraPos = screenPosEnemy - screenPosPlayer;
+		CameraPos.y *= 1.777f;
+		CameraPos.z = 0.0f;
+		float fLength = CManager::GetInstance()->GetDistance(CameraPos) ;
+		if (fLength < 100.0f)
 		{
-			fLength = 300.0f;
+			fLength = 100.0f;
 		}
 		D3DXVECTOR3 vec = pos - GetPos();
 		if (m_pMotion->GetType() < MOTION_COMBINATION1)
 		{
 			pCamera->SetRDest((GetPos() + pos) * 0.5f);
-			pCamera->SetLenght(fLength);
+			pCamera->SetLenght(pCamera->GetLenght() + (fLength - pCamera->GetLenght()) * 0.10f);
 			//pCamera->SetRotDest(pCamera->GetRotDest() + (D3DXVECTOR3(0.0f, atan2f(-vec.x, -vec.z) - 0.2f, pCamera->GetRotDest().z) - pCamera->GetRotDest()) * 0.1f);
 		}
 		else

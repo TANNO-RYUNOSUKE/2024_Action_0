@@ -47,7 +47,7 @@ CPlayer::CPlayer(int nPriority):CObject(nPriority)
 	SetType(CObject::TYPE_PLAYER);
 
 	m_nLife = 0;
-
+	m_bShadow = true;
 
 
 }
@@ -940,7 +940,7 @@ void CPlayer::AutoCollisionCreate()
 		D3DXVECTOR3 posold = m_pOrbit->GetPosOld();
 		D3DXVECTOR3 pos = m_pOrbit->GetPos();
 		D3DXVECTOR3 Vec = -AnglesToVector(GetRot()) *m_fPower;
-		Vec.y += 10.0f;
+		Vec.y += 3.0f;
 		float Radius = CManager::GetInstance()->GetDistance(pos - posold) *m_Size;
 		m_pColl = CSphereCollision::Create(CSphereCollision::TYPE_PLAYERATTACK,Radius, m_nDamage, pos,Vec,NULL,this);
 	}

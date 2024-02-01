@@ -11,7 +11,8 @@
 #include "manager.h"
 #include "texture.h"
 #include "xfile.h"
-
+#include "ZTexture.h"
+#include "DepthShadow.h"
 //=============================================
 //コンストラクタ
 //=============================================
@@ -252,8 +253,32 @@ void CModel::Draw(void)
 		//テクスチャの設定
 		pDevice->SetTexture(0, pTex->Getaddress(m_pIdxTex[nCntMat]));
 
+		if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetZShader()->SetWorldMatrix(&m_mtxWorld);
+			CManager::GetInstance()->GetRenderer()->GetZShader()->SetParamToEffect();
+			CManager::GetInstance()->GetRenderer()->GetZShader()->BeginPass();
+		}
+		else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetWorldMatrix(&m_mtxWorld);
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetAmbient(&(D3DXCOLOR)Color);
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetParamToEffect();
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->BeginPass();
+		}
+
 		//モデル(パーツ)の描写
 		pXFile->GetAddress(m_nIdxXFile)->DrawSubset(nCntMat);
+
+		if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetZShader()->EndPass();
+		}
+		else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->EndPass();
+		}
+
 		//m_pMesh->DrawSubset(nCntMat);
 		
 	}

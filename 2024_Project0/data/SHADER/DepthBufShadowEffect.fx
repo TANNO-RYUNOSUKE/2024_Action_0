@@ -51,8 +51,8 @@ VS_OUTPUT DepthBufShadow_VS( float4 Pos : POSITION , float3 Norm : NORMAL, float
  /*  float3 L = -LightDirect.xyz;
    float3 N = normalize(Norm.xyz);*/
    Out.Col = max(m_Ambient, (dot(N, -LightDirect)*0.5f));
-  /* Out.Col = float4(1.0, 1.0,1.0,1.0) * (0.3 + dot(N, -LightDirect)*(1-0.3f));
-   Out.Col.a = 1.0f;*/
+   Out.Col = float4(0.6, 0.55, 0.6, 0.6) * (0.4 + dot(N, -LightDirect)*(1-0.4f));
+   Out.Col.a = 1.0f;
 
 
    return Out;

@@ -26,6 +26,8 @@ CEnemy::CEnemy() :CObject()
 	m_rotDest = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_pMotion = NULL;
 	m_nLife = 0;
+	m_pCollision = NULL;
+	m_bShadow = true;
 	for (int i = 0; i < NUM_MODEL; i++)
 	{
 		m_apModel[i] = NULL;
@@ -75,7 +77,11 @@ void CEnemy::Uninit()
 		}
 
 	}
-
+	if (m_pCollision != NULL)
+	{
+		delete m_pCollision;
+		m_pCollision = NULL;
+	}
 }
 //=============================================
 //更新関数
@@ -224,11 +230,7 @@ HRESULT CEnemy_TEST::Init()
 void CEnemy_TEST::Uninit()
 {
 	CEnemy::Uninit();
-	if (m_pCollision != NULL)
-	{
-		delete m_pCollision;
-		m_pCollision = NULL;
-	}
+	
 
 }
 //=============================================
@@ -287,5 +289,221 @@ CEnemy_TEST * CEnemy_TEST::Create(D3DXVECTOR3 pos, int nLife)
 	pEnemy->Init();
 
 	
+	return pEnemy;
+}
+
+
+CEnemy_Walker::CEnemy_Walker() :CEnemy()
+{
+
+}
+
+CEnemy_Walker::~CEnemy_Walker()
+{
+}
+
+//=============================================
+//初期化関数
+//=============================================
+HRESULT CEnemy_Walker::Init()
+{
+	CEnemy::Init();
+	m_pMotion->Load("data\\TEXT\\motion_walker.txt");
+	m_pMotion->SetType(0);
+	m_Move = MOVE_NONE;
+	m_pCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMY, 30.0f, 0, D3DXVECTOR3(0.0f, 30.0f, -30.0f), VECTO3ZERO, &m_mtx, this);
+
+	m_posDest.x = GetPos().x;
+	m_posDest.z = GetPos().z;
+	m_posDest.y = GetPos().y;
+	m_rotDest = (D3DXVECTOR3(0.0f, D3DX_PI*0.5f, 0.0f));
+	return S_OK;
+}
+//=============================================
+//終了関数
+//=============================================
+void CEnemy_Walker::Uninit()
+{
+
+	CEnemy::Uninit();
+
+}
+//=============================================
+//更新関数
+//=============================================
+void CEnemy_Walker::Update()
+{
+
+	CEnemy::Update();
+	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
+	if (pMesh != NULL)
+	{
+		D3DXVECTOR3 move = GetMove();
+		if (pMesh->Collision(GetPosAddress()))
+		{
+			move.y = 0.0f;
+		}
+		else
+		{
+			move.y -= GRAVITY;
+		}
+		SetMove(move);
+	}
+	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD)
+	{
+		D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
+		vec.y = 0.0f;
+		D3DXVec3Normalize(&vec, &vec);
+		SetMove(GetMove() + vec * 0.2f);
+		m_rotDest.y = atan2f(-vec.x, -vec.z);
+		SetRot(GetRot() + (m_rotDest - GetRot()) * 0.1f);
+		m_pMotion->SetType(MOVE_WALK);
+	}
+	else
+	{
+		m_pMotion->SetType(MOVE_DAMAGE);
+	}
+	SetPos(GetPos() + GetMove());
+	D3DXVECTOR3 move = GetMove();
+	move.x *= 0.9f;
+	move.z *= 0.9f;
+	SetMove(move);
+	
+	m_pMotion->Update();
+
+	CEnemy::Update();
+}
+
+//=============================================
+//描画関数
+//=============================================
+void CEnemy_Walker::Draw()
+{
+	CEnemy::Draw();
+}
+//=============================================
+//生成関数
+//=============================================
+CEnemy_Walker * CEnemy_Walker::Create(D3DXVECTOR3 pos, int nLife)
+{
+
+	CEnemy_Walker * pEnemy = NULL;
+	pEnemy = DBG_NEW  CEnemy_Walker;
+
+	pEnemy->SetPos(pos);
+	pEnemy->m_nLife = nLife;
+	pEnemy->Init();
+
+	return pEnemy;
+}
+
+CEnemy_army::CEnemy_army() :CEnemy()
+{
+
+}
+
+CEnemy_army::~CEnemy_army()
+{
+}
+
+//=============================================
+//初期化関数
+//=============================================
+HRESULT CEnemy_army::Init()
+{
+	CEnemy::Init();
+	m_pMotion->Load("data\\TEXT\\motion_army.txt");
+	m_pMotion->SetType(0);
+
+	m_pCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMY, 30.0f, 0, D3DXVECTOR3(0.0f, 0.0f, 0.0f), VECTO3ZERO, m_apModel[1]->GetMatrixAddress(), this);
+
+	m_posDest.x = GetPos().x;
+	m_posDest.z = GetPos().z;
+	m_posDest.y = GetPos().y;
+	m_rotDest = (D3DXVECTOR3(0.0f, D3DX_PI*0.5f, 0.0f));
+	return S_OK;
+}
+//=============================================
+//終了関数
+//=============================================
+void CEnemy_army::Uninit()
+{
+
+	CEnemy::Uninit();
+
+}
+//=============================================
+//更新関数
+//=============================================
+void CEnemy_army::Update()
+{
+
+	CEnemy::Update();
+	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
+	if (pMesh != NULL)
+	{
+		D3DXVECTOR3 move = GetMove();
+		if (pMesh->Collision(GetPosAddress()))
+		{
+			move.y = 0.0f;
+		}
+		else
+		{
+			move.y -= GRAVITY;
+		}
+		SetMove(move);
+	}
+	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD && m_pMotion->GetType() != MOTION_DAMAGE)
+	{
+		D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
+		vec.y = 0.0f;
+		D3DXVec3Normalize(&vec, &vec);
+		SetMove(GetMove() + vec * 0.2f);
+		m_rotDest.y = atan2f(-vec.x, -vec.z);
+		SetRot(GetRot() + (m_rotDest - GetRot()) * 0.3f);
+		m_pMotion->SetType(MOTION_WALK);
+	}
+	else
+	{
+		m_rotDest.y = atan2f(-GetMove().x, -GetMove().z);
+		m_pMotion->SetType(MOTION_DAMAGE);
+	}
+	SetPos(GetPos() + GetMove());
+	D3DXVECTOR3 move = GetMove();
+	if (m_pMotion->GetType() != MOTION_DAMAGE)
+	{
+		move.x *= 0.9f;
+		move.z *= 0.9f;
+	}
+	
+	SetMove(move);
+
+	m_pMotion->Update();
+
+	CEnemy::Update();
+}
+
+//=============================================
+//描画関数
+//=============================================
+void CEnemy_army::Draw()
+{
+	CEnemy::Draw();
+}
+//=============================================
+//生成関数
+//=============================================
+CEnemy_army * CEnemy_army::Create(D3DXVECTOR3 pos, int nLife)
+{
+
+	CEnemy_army * pEnemy = NULL;
+	pEnemy = DBG_NEW  CEnemy_army;
+
+	pEnemy->SetPos(pos);
+	pEnemy->m_nLife = nLife;
+	pEnemy->Init();
+
 	return pEnemy;
 }

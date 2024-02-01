@@ -9,6 +9,8 @@
 #include "object.h"
 #include "debugproc.h"
 #include "manager.h"
+#include "ZTexture.h"
+#include "DepthShadow.h"
 
 //=============================================
 //コンストラクタ
@@ -100,6 +102,34 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
 
 	//各種オブジェクト初期化処理はここ
+
+
+	// シェーダー用の初期化は以下
+	// Z値テクスチャ生成オブジェクトの生成と初期化
+	m_pDev = m_pD3DDevice;
+	D3DXCreateSprite(m_pD3DDevice, &m_pSprite);// スプライト作成
+	m_pZTex = DBG_NEW CZTexture;
+	m_pZTex->Init(*m_pDev, SCREEN_WIDTH * 3.0f, SCREEN_WIDTH * 3.0f, D3DFMT_A32B32G32R32F);
+	m_pZTex->GetZTex(&m_pZTexture);
+
+	// 深度バッファシャドウオブジェクトの生成と初期化
+	m_pDepthShadow = DBG_NEW CDepthShadow;
+	m_pDepthShadow->Init(*m_pDev);
+	m_pDepthShadow->SetShadowMap(&m_pZTexture);	// シャドウマップテクスチャを登録
+	D3DXMatrixPerspectiveFovLH(&CameraProj, D3DXToRadian(45), 1.777f, 10.0f, 50000.0f);
+	D3DXMatrixPerspectiveFovLH(&LightProj, D3DXToRadian(90), 1.0f, 30.0f, 50000.0f);
+	D3DXMatrixLookAtLH(&LightView, &D3DXVECTOR3(2000.0f, 2000.0f, -000.0f), &D3DXVECTOR3(120.0f, -10.0f, 100.0f), &D3DXVECTOR3(0, 1, 0));
+
+	// Z値テクスチャOBJへ登録
+	m_pZTex->SetViewMatrix(&LightView);
+	m_pZTex->SetProjMatrix(&LightProj);
+
+	// 深度バッファシャドウOBJへ登録
+	// カメラビューは毎回変わるので描画時に登録します
+	m_pDepthShadow->SetLightViewMatrix(&LightView);
+	m_pDepthShadow->SetLightProjMatrix(&LightProj);
+	m_pDepthShadow->SetCameraProjMatrix(&CameraProj);
+
 	return S_OK;
 }
 //=============================================
@@ -122,7 +152,16 @@ void CRenderer::Uninit(void)
 		m_pD3D = NULL;
 	}
 	
-
+	if (m_pDepthShadow != NULL)
+	{
+		delete m_pDepthShadow;
+		m_pDepthShadow = NULL;
+	}
+	if (m_pZTex != NULL)
+	{
+		delete m_pZTex;
+		m_pZTex = NULL;
+	}
 }
 //=============================================
 //更新関数
@@ -146,6 +185,22 @@ void CRenderer::Draw(void)
 	if (SUCCEEDED(m_pD3DDevice->BeginScene()))
 	{//成功した場合
 		CObject::DrawAll();
+		m_pZTex->Begin();
+		CObject::DrawAll();
+		m_pZTex->End();
+	
+		m_pDepthShadow->Begin();
+		CObject::DrawAll();
+		m_pDepthShadow->End();
+		// オブジェクトの全描画
+		CObject::DrawAll();
+
+		D3DXMATRIX SpriteScaleMat;
+		D3DXMatrixScaling(&SpriteScaleMat, 0.125f, 0.125f, 1.0f);
+		m_pSprite->SetTransform(&SpriteScaleMat);
+		m_pSprite->Begin(0);
+		//m_pSprite->Draw(m_pZTexture, NULL, NULL, NULL, 0xffffffff);
+		m_pSprite->End();
 		pDeb->Draw();
 		//終了
 		m_pD3DDevice->EndScene();

@@ -79,9 +79,11 @@ public:
 
 	virtual void SetMtx(D3DXMATRIX mtx) { m_mtx = mtx; }
 	virtual D3DXMATRIX GetMtx() { return m_mtx; }
+	bool m_bShadow;
 protected:
 	int m_nIdxTex[8];//テクスチャのアドレスを保持
 	D3DXMATRIX m_mtx;
+	
 private:
 	//static CObject * m_apObject[NUM_PRIORITY][NUM_OBJECT];//オブジェクトのポインタ
 	static CObject * m_apTop[NUM_PRIORITY];//オブジェクトの先頭

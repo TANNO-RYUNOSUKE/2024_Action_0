@@ -12,6 +12,8 @@
 #include "debugproc.h"
 #include "input.h"
 #include <stdio.h>
+#include "ZTexture.h"
+#include "DepthShadow.h"
 
 //=============================================
 //コンストラクタ
@@ -23,6 +25,7 @@ CMeshfield::CMeshfield(int nPriority) : CObject(nPriority)
 	m_pVtxBuff = NULL;
 	m_fHeight = 0.0f;
 	m_fWidth = 0.0f;
+	m_bShadow = true;
 }
 
 
@@ -410,9 +413,29 @@ void CMeshfield::Draw(void)
 	//テクスチャの設定
 	pDevice->SetTexture(0, m_pTexture);
 
-	
+	if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+	{
+		CManager::GetInstance()->GetRenderer()->GetZShader()->SetWorldMatrix(&m_mtxWorld);
+		CManager::GetInstance()->GetRenderer()->GetZShader()->SetParamToEffect();
+		CManager::GetInstance()->GetRenderer()->GetZShader()->BeginPass();
+	}
+	else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+	{
+		CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetWorldMatrix(&m_mtxWorld);
+		CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetAmbient(&(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f)));
+		CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetParamToEffect();
+		CManager::GetInstance()->GetRenderer()->GetDepthShader()->BeginPass();
+	}
 		//ポリゴンの描画
 	pDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, (m_nSplit_U * m_nSplit_V), 0, (m_nSplit_V * 2 * (m_nSplit_U - 1) + ((m_nSplit_U - 3) * 2)));
+	if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+	{
+		CManager::GetInstance()->GetRenderer()->GetZShader()->EndPass();
+	}
+	else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+	{
+		CManager::GetInstance()->GetRenderer()->GetDepthShader()->EndPass();
+	}
 
 
 }

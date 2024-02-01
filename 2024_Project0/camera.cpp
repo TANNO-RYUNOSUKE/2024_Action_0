@@ -10,7 +10,8 @@
 #include "renderer.h"
 #include "debugproc.h"
 #include "player.h"
-
+#include "DepthShadow.h"
+#include "ZTexture.h"
 //=============================================
 //コンストラクタ、デストラクタ
 //=============================================
@@ -244,4 +245,5 @@ void CCamera::Set()
 
 	//ビューマトリクスの設定
 	pDevice->SetTransform(D3DTS_VIEW, &m_mtxView);
+	CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetCameraViewMatrix(&m_mtxView);
 }

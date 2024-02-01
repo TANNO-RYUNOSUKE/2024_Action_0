@@ -217,9 +217,9 @@ HRESULT CGame::Init()
 	pTex->Regist("data\\TEXTURE\\spelhit.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect2.png");
-	CEnemy_TEST::Create(VECTO3ZERO, 100);
-	CEnemy_TEST::Create(D3DXVECTOR3(100.0f,0.0f,0.0f), 150);
-	CEnemy_TEST::Create(D3DXVECTOR3(-100.0f, 0.0f, 0.0f), 50);
+	CEnemy_army::Create(VECTO3ZERO, 100);
+	CEnemy_army::Create(D3DXVECTOR3(100.0f,0.0f,0.0f), 150);
+	CEnemy_army::Create(D3DXVECTOR3(-100.0f, 0.0f, 0.0f), 50);
 	CSound * pSound = CManager::GetInstance()->GetSound();
 	pSound->Play(CSound::SOUND_LABEL_BGM_ZONE);
 
@@ -261,7 +261,7 @@ void CGame::Update()
 	if (m_nCnt % (10 * 60)== 0 && m_nEnemyCount < 3)
 	{
 		D3DXVECTOR3 pos = D3DXVECTOR3(rand() % 10000 * 0.1f, 0.0f, rand() % 10000 * 0.1f);
-		CEnemy_TEST::Create(pos, 100);
+		CEnemy_army::Create(pos, 100);
 		CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
 		CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
 		m_nEnemyCount++;

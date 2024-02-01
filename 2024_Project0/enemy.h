@@ -60,7 +60,7 @@ protected:
 	D3DXVECTOR3 m_rotDest;
 	CMotion * m_pMotion;//モーションポインタ
 	CModel * m_apModel[NUM_MODEL];//使用するモデルのポインタ
-	
+	CSphereCollision * m_pCollision;
 private:
 	
 };
@@ -77,8 +77,56 @@ public:
 	void Draw(void);
 	static CEnemy_TEST * Create(D3DXVECTOR3 pos, int nLife);
 private:
-	CSphereCollision * m_pCollision;
+	
 };
 
 
+//エネミー(歩行戦車)
+class CEnemy_Walker : public CEnemy
+{
+public:
+	CEnemy_Walker();
+	~CEnemy_Walker();
+	enum MOVE
+	{
+		MOVE_NONE = 0,
+		MOVE_WALK,
+		MOVE_DAMAGE,
+		MOVE_MAX
+	};
+	HRESULT Init(void);
+	void Uninit(void);
+	void Update(void);
+	void Draw(void);
+	static CEnemy_Walker * Create(D3DXVECTOR3 pos, int nLife);
+private:
+	MOVE m_Move;
+
+};
+
+//エネミー(一般)
+class CEnemy_army : public CEnemy
+{
+public:
+	CEnemy_army();
+	~CEnemy_army();
+	enum MOTION
+	{
+		MOTION_NONE = 0,
+		MOTION_WALK,
+		MOTION_ATTACK,
+		MOTION_DAMAGE,
+		MOTION_MAX
+	};
+	HRESULT Init(void);
+	void Uninit(void);
+	void Update(void);
+	void Draw(void);
+	void Walk();
+	void Attack();
+	static CEnemy_army * Create(D3DXVECTOR3 pos, int nLife);
+private:
+	
+
+};
 #endif // ! _ENEMY_H_

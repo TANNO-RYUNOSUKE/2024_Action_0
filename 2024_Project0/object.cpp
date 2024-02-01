@@ -11,7 +11,8 @@
 #include "manager.h"
 #include "scene.h"
 #include "debugproc.h"
-
+#include "ZTexture.h"
+#include "DepthShadow.h"
 //静的メンバ変数の初期化
 CObject *CObject::m_apTop[NUM_PRIORITY] = {};
 CObject *CObject::m_apCur[NUM_PRIORITY] = {}; 
@@ -56,6 +57,7 @@ CObject::CObject(int nPriority)
 			break;
 		}
 	}*/
+	m_bShadow = false;
 	m_Type = TYPE_NONE;
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -164,7 +166,21 @@ void CObject::DrawAll(void)
 		while (pObject != NULL)
 		{
 			m_pStaticNext = pObject->m_pNext;
-			pObject->Draw();
+			if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+			{// オブジェクトの描画
+				if (pObject->m_bShadow)
+					pObject->Draw();
+			}
+			else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+			{// オブジェクトの描画
+				if (pObject->m_bShadow)
+					pObject->Draw();
+			}
+			else
+			{
+				if (!pObject->m_bShadow)
+					pObject->Draw();
+			}
 			pObject = m_pStaticNext;
 		}
 	}

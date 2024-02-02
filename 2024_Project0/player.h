@@ -32,6 +32,7 @@ public:
 		MOTION_NEUTRAL,
 		MOTION_WALK,
 		MOTION_DASH,
+		MOTION_DODGE,
 		MOTION_JUMP,
 		
 		MOTION_COMBINATION1,
@@ -43,6 +44,8 @@ public:
 		MOTION_STREAK,
 		MOTION_HIGHROLLER,
 		MOTION_SPLIT,
+
+		MOTION_DAMAGE,
 		MOTION_MAX
 	}MOTION;
 
@@ -72,7 +75,7 @@ public:
 
 	void AddLife(int nAdd) { m_nLife += nAdd; }
 	int GetLife() { return m_nLife; }
-
+	D3DXVECTOR3 GetAttackPos() { return m_attackpos; }
 	CModel * GetModel(int nData = 0) { return m_apModel[nData]; }
 	CEnemy * GetTarget() { return *m_pEnemy; }
 	//モーション系
@@ -89,11 +92,16 @@ public:
 	void Streak();
 	void Highroller();
 	void Split();
+	void Down();
+	void Dodge();
 	void DeletCollision();
 	void AutoCollisionCreate();
 	void Direction();
 	void Mirage();
 	void Lockon();
+
+	bool Damage(int Damage, D3DXVECTOR3 Knockback);
+	CSphereCollision * GetHitCol() { return m_pHitCol; }
 private:
 	
 	int m_nLife;//体力
@@ -104,7 +112,8 @@ private:
 	D3DXVECTOR3 m_posOld;//1フレーム前の座標
 	D3DXVECTOR3 m_rotDest;
 	D3DXVECTOR3 m_rotShot; //射撃方向
-	bool m_bLand;//着地したかどうか
+	D3DXVECTOR3 m_attackpos;
+	bool m_bLand;//着地した かどうか
 	int m_nLand;
 	bool m_bMotionLock;
 	bool m_bKey;
@@ -115,6 +124,7 @@ private:
 	float m_Size;
 	CEnemy ** m_pEnemy;
 	CSphereCollision * m_pColl;
+	CSphereCollision * m_pHitCol;
 	CBillboard * m_pTarget;
 };
 

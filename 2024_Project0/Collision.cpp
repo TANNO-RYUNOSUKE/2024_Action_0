@@ -3,6 +3,7 @@
 #include "animbillboard.h"
 #include "sound.h"
 #include "camera.h"
+#include "player.h"
 Clist<CSphereCollision *> CSphereCollision::List = {};
 CSphereCollision::CSphereCollision()
 {
@@ -74,6 +75,23 @@ void CSphereCollision::Collision()
 		}
 		break;
 	case CSphereCollision::TYPE_ENEMYATTACK:
+	{
+		CSphereCollision * pCollision = CManager::GetInstance()->GetScene()->GetPlayer()->GetHitCol();
+
+		if (CManager::GetInstance()->GetDistance(pCollision->m_Pos - m_Pos) <= (m_fRadius + pCollision->m_fRadius))
+		{
+			D3DXVECTOR3 vec = pCollision->m_Pos - m_Pos;
+			vec.y = 0.0f;
+			D3DXVec3Normalize(&vec, &vec);
+			if (pCollision->m_pParent->Damage(m_nPower, -vec * 25.0f))
+			{
+				pCamera->SetShake(6);
+
+				CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHHIT);
+				CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false, (pCollision->m_Pos + m_Pos)*0.5f + m_knockback, "data\\TEXTURE\\HitEffect.png")->SetColor(D3DXCOLOR(1.0f, 0.25f, 0.5f, 1.0f));
+			}
+		}
+	}
 		break;
 	case CSphereCollision::TYPE_INDISCRIMINATEATTACK:
 		break;

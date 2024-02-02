@@ -16,6 +16,7 @@
 #include "sound.h"
 #include "player.h"
 #include "camera.h"
+#include "Supporter.h"
 
 Clist<CEnemy *> CEnemy::EnemyList = {};
 //=============================================
@@ -48,8 +49,8 @@ CEnemy::~CEnemy()
 HRESULT CEnemy::Init()
 {
 	m_nStateCount = 0;
-	m_nArmor = m_nLife * 0.5f;
-	
+	m_nArmor = m_nLife;
+	m_nArmorMax = m_nArmor;
 	m_pMotion = DBG_NEW  CMotion;
 	m_pMotion->SetModel(&m_apModel[0]);
 	SetType(CObject::TYPE_ENEMY);
@@ -102,6 +103,11 @@ void CEnemy::Update()
 		pos.y += (rand() % 1000) *0.1f;
 		CAnimBillboard::Create(fSize, fSize, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
 	}
+	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+	if (m_state == STATE_DAMAGE && pPlayer != NULL)
+	{
+		SetMove(GetMove() + (pPlayer->GetAttackPos() - GetPos()) * 0.0025f);
+	}
 	if (m_nStateCount <= 0)
 	{
 	
@@ -109,6 +115,8 @@ void CEnemy::Update()
 		{
 		case CEnemy::STATE_DAMAGE:
 			m_state = STATE_NONE;
+
+		
 			break;
 		case CEnemy::STATE_DEAD:
 			pos = GetPos();
@@ -183,7 +191,11 @@ bool CEnemy::Damage(int nDamage, D3DXVECTOR3 knockback)
 {
 	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD)
 	{
-		if (m_nArmor > 0)
+		if (m_nArmor <= 0)
+		{
+			m_nArmor = m_nArmorMax * 0.75f;
+		}
+		if (m_nArmor > m_nArmorMax * 0.5f)
 		{
 			m_nLife -= nDamage * 0.5f;
 			SetMove(GetMove() + knockback * 0.5f);
@@ -193,6 +205,8 @@ bool CEnemy::Damage(int nDamage, D3DXVECTOR3 knockback)
 		{
 			m_nLife -= nDamage;
 			SetMove(GetMove() + knockback);
+			m_nArmor -= nDamage;
+		
 		}
 	
 		if (m_nLife <= 0)
@@ -427,7 +441,7 @@ HRESULT CEnemy_army::Init()
 	m_pMotion->SetType(0);
 	m_pOrbit = NULL;
 	m_pCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMY, 30.0f, 0, D3DXVECTOR3(0.0f, 0.0f, 0.0f), VECTO3ZERO, m_apModel[1]->GetMatrixAddress(), this);
-	
+	m_pAttackCollision = NULL;
 	m_posDest.x = GetPos().x;
 	m_posDest.z = GetPos().z;
 	m_posDest.y = GetPos().y;
@@ -442,7 +456,11 @@ HRESULT CEnemy_army::Init()
 //=============================================
 void CEnemy_army::Uninit()
 {
-
+	if (m_pAttackCollision != NULL)
+	{
+		delete m_pAttackCollision;
+		m_pAttackCollision = NULL;
+	}
 	CEnemy::Uninit();
 
 }
@@ -468,24 +486,28 @@ void CEnemy_army::Update()
 		}
 		SetMove(move);
 	}
-	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD && m_pMotion->GetType() != MOTION_DAMAGE)
+	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD && m_pMotion->GetType() != MOTION_DAMAGE && m_pMotion->GetType() != MOTION_DOWN)
 	{
 		D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
 		switch (m_Routine)
 		{
 		case CEnemy_army::ROUTINE_WAIT:
 			m_pMotion->SetType(MOTION_NONE);
+			
 			break;
 		case CEnemy_army::ROUTINE_FORWARD:
 			vec.y = 0.0f;
+			
 			D3DXVec3Normalize(&vec, &vec);
 			SetMove(GetMove() + vec * 0.2f);
 			m_rotDest.y = atan2f(-vec.x, -vec.z);
 			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
 			m_pMotion->SetType(MOTION_WALK);
+
 			break;
 		case CEnemy_army::ROUTINE_BACK:
 			vec.y = 0.0f;
+		
 			D3DXVec3Normalize(&vec, &vec);
 			SetMove(GetMove() + vec * -0.2f);
 			m_rotDest.y = atan2f(-vec.x, -vec.z);
@@ -493,17 +515,7 @@ void CEnemy_army::Update()
 			m_pMotion->SetType(MOTION_WALK);
 			break;
 		case CEnemy_army::ROUTINE_ATTACK:
-			if (m_pOrbit == NULL)
-			{
-				m_pOrbit = COrbit::Create(60, D3DXCOLOR(1.0f, 0.25f, 0.5f, 1.0f), D3DXVECTOR3(-1.5f, 10.0f, -75.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
-			}
-		
-			vec.y = 0.0f;
-			D3DXVec3Normalize(&vec, &vec);
-			
-			m_rotDest.y = atan2f(-vec.x, -vec.z);
-			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
-			m_pMotion->SetType(MOTION_ATTACK);
+			Attack();
 			break;
 		case CEnemy_army::ROUTINE_MAX:
 			break;
@@ -516,19 +528,37 @@ void CEnemy_army::Update()
 
 	SetPos(GetPos() + GetMove());
 	D3DXVECTOR3 move = GetMove();
-	if (m_pMotion->GetType() != MOTION_DAMAGE)
-	{
-		move.x *= 0.9f;
-		move.z *= 0.9f;
-	}
+	
+	move.x *= 0.9f;
+	move.z *= 0.9f;
+	
 	
 	SetMove(move);
-
+	D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
+	vec.y = 0.0f;
 	m_pMotion->Update();
 	m_nRoutineCount--;
+	if (GetDistance(vec) < 80.0f)
+	{
+		m_nRoutineCount -= 2;
+	}
+	if (m_pAttackCollision != NULL && m_pMotion->GetType() != MOTION_ATTACK)
+	{
+		delete m_pAttackCollision;
+		m_pAttackCollision = NULL;
+	}
 	if (m_nRoutineCount <= 0 && m_pMotion->GetType() != MOTION_ATTACK)
 	{
-		SetRoutine((ROUTINE)(rand() % ROUTINE_MAX), rand()%120+ 30);
+		
+		if (GetDistance(vec) < 80.0f)
+		{
+			SetRoutine((ROUTINE)(rand() % ROUTINE_MAX), 30);
+		}
+		else
+		{
+			SetRoutine((ROUTINE)(rand() % ROUTINE_ATTACK), rand() % 120 + 30);
+		}
+	
 		if (m_pOrbit != NULL)
 		{
 			m_pOrbit->end();
@@ -550,16 +580,68 @@ bool CEnemy_army::Damage(int nDamage, D3DXVECTOR3 knockback)
 	
 	if (CEnemy::Damage(nDamage, knockback))
 	{
-		if (m_nArmor <= 0)
+		if (m_nArmor <= m_nArmorMax * 0.5f)
 		{
 			m_rotDest.y = atan2f(-GetMove().x, -GetMove().z);
 			m_pMotion->SetType(MOTION_DAMAGE);
+			m_pMotion->SetkeyNumber(0);
+		}
+		if (m_nArmor <= 0)
+		{
+			m_pMotion->SetType(MOTION_DOWN);
 			m_pMotion->SetkeyNumber(0);
 		}
 		
 		return true;
 	}
 	return false;
+
+}
+void  CEnemy_army::Attack()
+{
+	m_pMotion->SetType(MOTION_ATTACK);
+	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+	D3DXVECTOR3 vec = (pPlayer->GetPos() - GetPos());
+	m_rotDest.y = atan2f(-vec.x, -vec.z);
+	SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
+	if (m_pMotion->GetKey() == 2)
+	{
+		if (m_pOrbit == NULL)
+		{
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHSWING);
+			m_pOrbit = COrbit::Create(30, D3DXCOLOR(1.0f, 0.25f, 0.5f, 1.0f), D3DXVECTOR3(-1.5f, 0.0f, -54.0f), D3DXVECTOR3(-5.0f, 0.0f, 0.0f), m_apModel[15]->GetMatrixAddress(), "data\\TEXTURE\\OrbitBrade.png");
+		}
+		if (m_pAttackCollision == NULL)
+		{
+			m_pAttackCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMYATTACK, 30.0f, 7, D3DXVECTOR3(-1.5f, 0.0f, -34.0f), VECTO3ZERO, m_apModel[15]->GetMatrixAddress(), this);
+		}
+
+	}
+	if (m_pMotion->GetKey() >= 5)
+	{
+		if (m_pOrbit != NULL)
+		{
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+		if (m_pAttackCollision != NULL)
+		{
+			delete m_pAttackCollision;
+			m_pAttackCollision = NULL;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 14; i++)
+		{
+			if (m_apModel[i] != NULL)
+			{
+				CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(1.0f, 0.25f, 0.5f, 0.25f), 30);
+			}
+
+		}
+	}
+
 
 }
 //=============================================

@@ -56,6 +56,7 @@ protected:
 	float m_fdIstance;//ÉvÉåÉCÉÑÅ[Ç∆ÇÃãóó£
 	int m_nLife; //ëÃóÕ
 	int m_nArmor;
+	int m_nArmorMax;
 	D3DXVECTOR3 m_posDest;
 	D3DXVECTOR3 m_Force;
 	D3DXVECTOR3 m_rotDest;
@@ -117,6 +118,7 @@ public:
 		MOTION_WALK,
 		MOTION_ATTACK,
 		MOTION_DAMAGE,
+		MOTION_DOWN,
 		MOTION_MAX
 	};
 	enum ROUTINE

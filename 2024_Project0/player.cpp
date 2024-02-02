@@ -50,7 +50,7 @@ CPlayer::CPlayer(int nPriority):CObject(nPriority)
 	m_nLife = 0;
 	m_bShadow = true;
 
-
+	m_pHitCol = NULL;
 }
 //=============================================
 //デストラクタ
@@ -79,7 +79,9 @@ HRESULT CPlayer::Init()
 	m_nDamage = 0;
 	m_fPower = 0.0f;
 	m_Size = 0.0f;
-
+	m_attackpos = VECTO3ZERO;
+	m_attackpos.z + 40.0f;
+	m_pHitCol = CSphereCollision::Create(CSphereCollision::TYPE_PLAYER, 10.0f, 0, VECTO3ZERO, VECTO3ZERO, m_apModel[1]->GetMatrixAddress(), this);
 	return S_OK;
 }
 //=============================================
@@ -104,6 +106,11 @@ void CPlayer::Uninit()
 		delete m_pEnemy;
 		m_pEnemy = NULL;
 	}
+	if (m_pHitCol != NULL)
+	{
+		delete m_pHitCol;
+		m_pHitCol = NULL;
+	}
 	for (int nCnt = 0; nCnt < NUM_MODEL; nCnt++)
 	{
 		if (m_apModel[nCnt] != NULL)
@@ -120,6 +127,9 @@ void CPlayer::Uninit()
 //=============================================
 void CPlayer::Update()
 {
+	m_attackpos = D3DXVECTOR3{ 0.0f,0.0f,-40.0f };
+
+	D3DXVec3TransformCoord(&m_attackpos, &m_attackpos, &m_mtx);
 	m_posOld = GetPos();
 	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
 	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
@@ -242,7 +252,7 @@ void CPlayer::Action()
 	CInputMouse * pInputMouse = CManager::GetInstance()->GetInputMouse();
 	m_pMotion->Update();
 	AutoCollisionCreate();
-	if (m_pMotion->GetType() < MOTION_COMBINATION1)
+	if (m_pMotion->GetType() < MOTION_COMBINATION1 && m_pMotion->GetType() != MOTION_DODGE)
 	{
 		m_bMotionLock = false;
 
@@ -301,7 +311,18 @@ void CPlayer::Action()
 		m_bKey = true;
 		m_pMotion->SetType(MOTION_JUMP);
 	}
-	
+	if (m_pMotion->GetType() != MOTION_DODGE  && pInputGamePad->GetTrigger(CInputGamePad::Button_B, 0))
+	{
+		m_bKey = true;
+		if (m_pOrbit != NULL)
+		{
+
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+		SetMove(GetMove() + AnglesToVector(GetRot()) * -15.0f);
+		m_pMotion->SetType(MOTION_DODGE);
+	}
 	Command();
 	switch (m_pMotion->GetType())
 	{
@@ -331,6 +352,12 @@ void CPlayer::Action()
 		break;
 	case MOTION_SPLIT:
 		Split();
+		break;
+	case MOTION_DAMAGE:
+		Down();
+		break;
+	case MOTION_DODGE:
+		Dodge();
 		break;
 	}
 
@@ -934,6 +961,43 @@ void CPlayer::Split()
 		m_pMotion->SetkeyNumber(4);
 	}
 }
+
+void CPlayer::Down()
+{
+	if (m_pMotion->GetKey() <= 5)
+	{
+		m_bMotionLock = true;
+	}
+	else
+	{
+		m_bMotionLock = false;
+	}
+}
+void CPlayer::Dodge()
+{
+
+	if (m_pMotion->GetKey() <=4)
+	{
+		CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+		D3DXVECTOR3 vec = VECTO3ZERO;
+		D3DXVECTOR3 rot = pCamera->GetRot();
+		CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
+		vec.x = pInputGamePad->GetStickL(0, 0.01f).x;
+		vec.z = -pInputGamePad->GetStickL(0, 0.01f).y;
+		D3DXMATRIX RotMtx;
+		D3DXMatrixIdentity((&RotMtx));
+		D3DXMatrixRotationY(&RotMtx, rot.y);
+		D3DXVec3TransformCoord(&vec, &vec, &RotMtx);
+		vec *= -1;
+		SetMove(GetMove() + vec * 0.5f);
+		m_bMotionLock = true;
+		Mirage();
+	}
+	else
+	{
+		m_bMotionLock = false;
+	}
+}
 void CPlayer::AutoCollisionCreate()
 {
 	if (m_pOrbit != NULL)
@@ -1061,10 +1125,27 @@ void CPlayer::Mirage()
 	{
 		if (m_apModel[i] != NULL)
 		{
-		//	CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f),30);
+			CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.25f),12);
 		}
 
 	}
+}
+bool CPlayer::Damage(int Damage, D3DXVECTOR3 Knockback)
+{
+	if (m_pMotion->GetType() != MOTION_DAMAGE &&m_pMotion->GetType() != MOTION_DODGE)
+	{
+		if (m_pOrbit != NULL)
+		{
+
+			m_pOrbit->end();
+			m_pOrbit = NULL;
+		}
+		m_nLife -= Damage;
+		SetMove(GetMove() + Knockback);
+		m_pMotion->SetType(MOTION_DAMAGE);
+		return true;
+	}
+	return false;
 }
 void CPlayer::Lockon()
 {
@@ -1141,6 +1222,12 @@ void CPlayer::Lockon()
 		if (fLength < 100.0f)
 		{
 			fLength = 100.0f;
+		}
+		else if (fLength > 1500.0f)
+		{
+			fLength = 1500.0f;
+			*m_pEnemy = NULL;
+			return;
 		}
 		D3DXVECTOR3 vec = pos - GetPos();
 		if (m_pMotion->GetType() < MOTION_COMBINATION1)

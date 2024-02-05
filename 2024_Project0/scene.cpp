@@ -213,7 +213,10 @@ HRESULT CGame::Init()
 	{
 		return -1;
 	};
-	CObjectX::Create("data\\MODEL\\sky.x", VECTO3ZERO, VECTO3ZERO,0)->SetLight(false);
+	CObjectX * pSky = CObjectX::Create("data\\MODEL\\sky.x", VECTO3ZERO, VECTO3ZERO,0);
+	pSky->SetLight(false);
+	pSky->m_bShadow = false;
+	CObjectX::Create("data\\MODEL\\city.x", D3DXVECTOR3(0.0f,-100.0f,0.0f), VECTO3ZERO, 0);
 	pTex->Regist("data\\TEXTURE\\spelhit.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect2.png");
@@ -225,7 +228,7 @@ HRESULT CGame::Init()
 
 	CAudience::Create();
 	return S_OK;
-	return S_OK;
+	
 }
 //=============================================
 //èIóπä÷êî

@@ -63,6 +63,7 @@ void CMotion::Update(void)
 		for (int nCnt = 0; nCnt < m_nNumModel; nCnt++)
 		{
 			KEY anim;
+
 			if (m_Info[m_nType].nNumkey != 0)
 			{
 				if (m_bBlend)

@@ -80,7 +80,7 @@ HRESULT CPlayer::Init()
 	m_fPower = 0.0f;
 	m_Size = 0.0f;
 	m_attackpos = VECTO3ZERO;
-	m_attackpos.z + 40.0f;
+
 	m_pHitCol = CSphereCollision::Create(CSphereCollision::TYPE_PLAYER, 10.0f, 0, VECTO3ZERO, VECTO3ZERO, m_apModel[1]->GetMatrixAddress(), this);
 	return S_OK;
 }

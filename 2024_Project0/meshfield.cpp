@@ -50,7 +50,7 @@ HRESULT CMeshfield::Init(void)
 
 	//テクスチャ読み込み
 	D3DXCreateTextureFromFile(pDevice,
-		"data\\TEXTURE\\sand.jpg",
+		"data\\TEXTURE\\asphalt.jpg",
 		&m_pTexture);
 
 

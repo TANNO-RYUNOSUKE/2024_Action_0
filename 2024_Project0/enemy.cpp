@@ -473,19 +473,7 @@ void CEnemy_army::Update()
 	CEnemy::Update();
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
-	if (pMesh != NULL)
-	{
-		D3DXVECTOR3 move = GetMove();
-		if (pMesh->Collision(GetPosAddress()))
-		{
-			move.y = 0.0f;
-		}
-		else
-		{
-				move.y -= GRAVITY;
-		}
-		SetMove(move);
-	}
+
 	if (m_state != STATE_DAMAGE && m_state != STATE_DEAD && m_pMotion->GetType() != MOTION_DAMAGE && m_pMotion->GetType() != MOTION_DOWN)
 	{
 		D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
@@ -564,6 +552,18 @@ void CEnemy_army::Update()
 			m_pOrbit->end();
 			m_pOrbit = NULL;
 		}
+	}
+	if (pMesh != NULL)
+	{
+
+		D3DXVECTOR3 move = GetMove();
+		move.y -= GRAVITY;
+		if (pMesh->Collision(GetPosAddress()))
+		{
+			move.y = 0.0f;
+		}
+
+		SetMove(move);
 	}
 	CEnemy::Update();
 }

@@ -66,12 +66,18 @@ public:
 	bool SetParamToEffect();
 
 	bool GetbPass(void) { return m_bPass; }
+	void SetLightpos(D3DXVECTOR3 pos) { m_Lightpos = (D3DXVECTOR4)pos; }
+	void SetLightSeepos(D3DXVECTOR3 pos) { m_LightSeepos = (D3DXVECTOR4)pos; }
 private:
 	// メンバ変数
 	IDirect3DDevice9 * m_cpDev;			// 描画デバイス
 	IDirect3DTexture9 * m_cpShadowMapTex;	// シャドウマップテクスチャ
 	ID3DXEffect * m_cpEffect;			// 深度バッファシャドウエフェクト
 	D3DXVECTOR4 m_AmbientCol;
+	D3DXVECTOR4 m_Eyepos;
+	D3DXVECTOR4 m_Lightpos;
+	D3DXVECTOR4 m_LightSeepos;
+	D3DXVECTOR4 m_LightVec;
 	D3DXMATRIX m_matWorld;						// ワールド変換行列
 	D3DXMATRIX m_matCameraView;					// カメラのビュー変換行列
 	D3DXMATRIX m_matCameraProj;					// カメラの射影変換行列

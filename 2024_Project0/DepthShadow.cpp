@@ -8,7 +8,8 @@
 //	インクルードファイル
 //************************************************************
 #include "DepthShadow.h"
-
+#include "manager.h"
+#include "camera.h"
 #include <tchar.h>
 
 
@@ -162,12 +163,23 @@ HRESULT CDepthShadow::EndPass()
 // 登録されているパラメータ情報をエフェクトにセット
 bool CDepthShadow::SetParamToEffect()
 {
+	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	if (pCamera != NULL)
+	{
+		D3DXVECTOR3 pos =pCamera->GetPosR();
+		m_Eyepos = D3DXVECTOR4(pos.x, pos.y, pos.z, 0.0f);
+		HRESULT hr = m_cpEffect->SetVector("m_EyePos", &m_Eyepos);
+	}
+	m_LightVec = m_LightSeepos - m_Lightpos;
+	m_cpEffect->SetVector("m_LightPos", &m_Lightpos);
+	m_cpEffect->SetVector("m_LightVec", &m_LightVec);
 	m_cpEffect->SetMatrix( m_hWorldMat, &m_matWorld );
 	m_cpEffect->SetMatrix( m_hCameraViewMat, &m_matCameraView );
 	m_cpEffect->SetMatrix( m_hCameraProjMat, &m_matCameraProj );
 	m_cpEffect->SetMatrix( m_hLightViewMat, &m_matLightView );
 	m_cpEffect->SetMatrix( m_hLightProjMat, &m_matLightProj );
 	m_cpEffect->SetVector(m_hAmbient, &m_AmbientCol);
+
 	HRESULT hr = m_cpEffect->SetTexture( m_hShadowMapTex, m_cpShadowMapTex);
 
 	return true;

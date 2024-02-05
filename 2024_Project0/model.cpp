@@ -119,7 +119,7 @@ HRESULT CModel::Init(void)
 	//テクスチャの読み込み
 
 	m_pIdxTex = DBG_NEW  int[(int)pXFile->GetNumMaterial(m_nIdxXFile)];
-	*m_pIdxTex = -1;
+	
 	D3DXMATERIAL *pMat; //マテリアルデータへのポインタ
 	pMat = (D3DXMATERIAL*)pXFile->GetMaterial(m_nIdxXFile)->GetBufferPointer();
 	for (int nCntMat = 0; nCntMat < (int)pXFile->GetNumMaterial(m_nIdxXFile); nCntMat++)

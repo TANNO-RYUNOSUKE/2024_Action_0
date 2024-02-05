@@ -1,9 +1,2 @@
-﻿  player.cpp
-player.cpp(83): warning C4552: '+': 演算子にプログラム上の作用がありません。作用を伴う演算子を使用してください
-  コード生成しています。
-  2 of 998 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
-  コード生成が終了しました。
-  C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\C++Game_basis.exe
+﻿  C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\C++Game_basis.exe
   C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\C++Game_basis.pdb (Full PDB)

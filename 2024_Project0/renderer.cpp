@@ -11,7 +11,7 @@
 #include "manager.h"
 #include "ZTexture.h"
 #include "DepthShadow.h"
-
+#include "player.h"
 //=============================================
 //コンストラクタ
 //=============================================
@@ -109,7 +109,7 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 	m_pDev = m_pD3DDevice;
 	D3DXCreateSprite(m_pD3DDevice, &m_pSprite);// スプライト作成
 	m_pZTex = DBG_NEW CZTexture;
-	m_pZTex->Init(*m_pDev, SCREEN_WIDTH * 3.0f, SCREEN_WIDTH * 3.0f, D3DFMT_A32B32G32R32F);
+	m_pZTex->Init(*m_pDev, SCREEN_WIDTH * 1.0f, SCREEN_WIDTH * 1.0f, D3DFMT_A32B32G32R32F);
 	m_pZTex->GetZTex(&m_pZTexture);
 
 	// 深度バッファシャドウオブジェクトの生成と初期化
@@ -117,8 +117,8 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 	m_pDepthShadow->Init(*m_pDev);
 	m_pDepthShadow->SetShadowMap(&m_pZTexture);	// シャドウマップテクスチャを登録
 	D3DXMatrixPerspectiveFovLH(&CameraProj, D3DXToRadian(45), 1.777f, 10.0f, 50000.0f);
-	D3DXMatrixPerspectiveFovLH(&LightProj, D3DXToRadian(90), 1.0f, 30.0f, 50000.0f);
-	D3DXMatrixLookAtLH(&LightView, &D3DXVECTOR3(2000.0f, 2000.0f, -000.0f), &D3DXVECTOR3(120.0f, -10.0f, 100.0f), &D3DXVECTOR3(0, 1, 0));
+	D3DXMatrixPerspectiveFovLH(&LightProj, D3DXToRadian(45), 1.0f, 30.0f, 50000.0f);
+	D3DXMatrixLookAtLH(&LightView, &D3DXVECTOR3(00.0f, 500.0f, 000.0f), &D3DXVECTOR3(10.0f, -10.0f, 00.0f), &D3DXVECTOR3(0, 1, 0));
 
 	// Z値テクスチャOBJへ登録
 	m_pZTex->SetViewMatrix(&LightView);
@@ -170,7 +170,22 @@ void CRenderer::Update(void)
 {
 	//各種オブジェクトの更新処理
 	CObject::UpDateAll();
+	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+	if (pPlayer != NULL)
+	{
+		D3DXVECTOR3 V = (D3DXVECTOR3(0.0f, 500.0f, 0.0f) + pPlayer->GetPos());
+		D3DXVECTOR3 R = (D3DXVECTOR3(10.0f, -10.0f, 0.0f) + pPlayer->GetPos());
+		D3DXMatrixLookAtLH(&LightView, &V, &R, &D3DXVECTOR3(0, 1, 0));
+		m_pDepthShadow->SetLightpos(V);
+		m_pDepthShadow->SetLightSeepos(R);
+		// Z値テクスチャOBJへ登録
+		m_pZTex->SetViewMatrix(&LightView);
+		// 深度バッファシャドウOBJへ登録
+
+		m_pDepthShadow->SetLightViewMatrix(&LightView);
 	
+	
+	}
 }
 //=============================================
 //描画関数

@@ -33,6 +33,7 @@ public:
 	void SetRotDest(D3DXVECTOR3 rot) { m_rotDest = rot; }
 	D3DXVECTOR3 GetVec(void) { return m_vecCamera; }
 	D3DXVECTOR3 GetPosV(void) { return m_posV; }
+	D3DXVECTOR3 GetPosR(void) { return m_posR; }
 	D3DXMATRIX m_mtxProjection;	//プロジェクションマトリクス
 	D3DXMATRIX m_mtxView;		//ビューマトリクス
 private:

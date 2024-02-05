@@ -1,4 +1,2 @@
-﻿  player.cpp
-c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\player.cpp(83): warning C4552: '+': 演算子にプログラム上の作用がありません。作用を伴う演算子を使用してください
-  C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\Debug\C++Game_basis.exe
+﻿  C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\Debug\C++Game_basis.exe
   C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\Debug\C++Game_basis.pdb (Partial PDB)

@@ -11,6 +11,8 @@
 #include "texture.h"
 #include "xfile.h"
 #include "Xmanager.h"
+#include "ZTexture.h"
+#include "DepthShadow.h"
 #include<vector>
 
 
@@ -26,6 +28,7 @@ CObjectX::CObjectX(int nPriority) : CObject(nPriority)
 	m_pVtxBuff = NULL;
 	m_vtxMaxModel = D3DXVECTOR3(-1000.0f, -1000.0f, -1000.0f);
 	m_vtxMinModel = D3DXVECTOR3(1000.0f, 1000.0f, 1000.0f);
+	m_bShadow = true;
 	m_bLight = true;
 }
 
@@ -208,12 +211,35 @@ void CObjectX::Draw(void)
 	{
 		//マテリアルの設定
 		pDevice->SetMaterial(&pMat[nCntMat].MatD3D);
+		D3DCOLORVALUE Color = pMat[nCntMat].MatD3D.Diffuse;
 
 		//テクスチャの設定
 		pDevice->SetTexture(0, pTex->Getaddress((m_nIdxTex[nCntMat])));
-
+		if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetZShader()->SetWorldMatrix(&m_mtxWorld);
+			CManager::GetInstance()->GetRenderer()->GetZShader()->SetParamToEffect();
+			CManager::GetInstance()->GetRenderer()->GetZShader()->BeginPass();
+		}
+		else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetWorldMatrix(&m_mtxWorld);
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetAmbient(&(D3DXCOLOR)Color);
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->SetParamToEffect();
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->BeginPass();
+		}
 		//モデル(パーツ)の描写
 		pXFile->GetAddress(m_nIdxXFile)->DrawSubset(nCntMat);
+
+
+		if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetZShader()->EndPass();
+		}
+		else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+		{
+			CManager::GetInstance()->GetRenderer()->GetDepthShader()->EndPass();
+		}
 		//m_pMesh->DrawSubset(nCntMat);
 	}
 	//保存していたマテリアルを戻す

@@ -13,17 +13,21 @@
 #include "collision.h"
 #include "enemy.h"
 #include "billboard.h"
+#include "animbillboard.h"
+#include "object2D.h"
 #include <vector>
 //マクロ定義
 #define GRAVITY (0.4f)
+#define SCORE_BORDER (300)
 #define WALK_SPEED (0.18f)
 #define DASH_SPEED (1.0f)
 #define ENERGY_MAX (3.0f)
+#define PLAYERLIFE_MAX (100)
 //クラス定義
 class CPlayer : public CObject //オブジェクトクラスの継承
 {
 public:
-	CPlayer(int nPriority = 5);
+	CPlayer(int nPriority = 6);
 	~CPlayer();
 
 	typedef enum 
@@ -77,7 +81,9 @@ public:
 	int GetLife() { return m_nLife; }
 	D3DXVECTOR3 GetAttackPos() { return m_attackpos; }
 	CModel * GetModel(int nData = 0) { return m_apModel[nData]; }
-	CEnemy * GetTarget() { return *m_pEnemy; }
+	CEnemy * GetTarget() { if (m_pEnemy != NULL) { return *m_pEnemy; } else { return NULL; } }
+	void StylishRank();
+
 	//モーション系
 	void Action();
 	void Command();
@@ -101,7 +107,11 @@ public:
 	void Lockon();
 
 	bool Damage(int Damage, D3DXVECTOR3 Knockback);
+	void ScoreUp();
 	CSphereCollision * GetHitCol() { return m_pHitCol; }
+	void SetLog(MOTION motion);
+	int GetActionLogCount();
+	int GetRank() { return m_nRank; }
 private:
 	
 	int m_nLife;//体力
@@ -122,10 +132,18 @@ private:
 	int   m_nDamage;
 	float m_fPower;
 	float m_Size;
+	int m_nMovecount;
 	CEnemy ** m_pEnemy;
 	CSphereCollision * m_pColl;
 	CSphereCollision * m_pHitCol;
-	CBillboard * m_pTarget;
+	CObject2D * m_pRank;
+	CObject2D * m_pScoreGage;
+	CAnimBillboard * m_pTarget;
+	int m_nScore;
+	int m_nRank;
+	int m_nRankOld;
+	std::vector<MOTION> m_vActionLog;
+
 };
 
 #endif // ! _PLAYER_H_

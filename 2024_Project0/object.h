@@ -37,6 +37,8 @@ public:
 	
 	static void ReleaseAll(void);
 	static void DrawAll(void);
+	static void Draw3D(void);
+	static void DrawUI(void);
 	static void UpDateAll(void);
 
 	D3DXVECTOR3 GetPos();// { return m_pos; }//座標取得
@@ -80,10 +82,14 @@ public:
 	virtual void SetMtx(D3DXMATRIX mtx) { m_mtx = mtx; }
 	virtual D3DXMATRIX GetMtx() { return m_mtx; }
 	bool m_bShadow;
+	bool m_bZ;
+	bool m_bDraw;
+	bool m_bAutoRelease;
+	bool m_bUI;
 protected:
 	int m_nIdxTex[8];//テクスチャのアドレスを保持
 	D3DXMATRIX m_mtx;
-	
+
 private:
 	//static CObject * m_apObject[NUM_PRIORITY][NUM_OBJECT];//オブジェクトのポインタ
 	static CObject * m_apTop[NUM_PRIORITY];//オブジェクトの先頭

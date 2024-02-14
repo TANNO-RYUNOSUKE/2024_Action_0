@@ -9,6 +9,15 @@
 #include "billboard.h"
 #include "orbit.h"
 #include "collision.h"
+static D3DXCOLOR Col[] =
+{
+	D3DXCOLOR(0.5f,0.5f,0.5f,1.0f),
+	D3DXCOLOR(0.5f,0.3f,0.75f,1.0f),
+	D3DXCOLOR(1.0f,0.6f,0.25f,1.0f),
+	D3DXCOLOR(0.3f,1.0f,0.7f,1.0f),
+	D3DXCOLOR(0.6f,0.6f,1.0f,1.0f),
+	D3DXCOLOR(1.0f,0.3f,0.3f,1.0f),
+};
 //クラス定義
 class CBullet : public CObject //オブジェクトクラスの継承
 {
@@ -30,15 +39,17 @@ public:
 
 	static CBullet * Create(D3DXVECTOR3 pos, D3DXVECTOR3 move, int nLife, TYPE type);
 	void SetLife(int nLife) { m_nLife = nLife; }
+	
 protected:
 	TYPE m_Type;
-private:
-
 	CSphereCollision * m_pColl;
 	COrbit * m_pOrbit;
 	COrbit * m_pOrbit2;
 	CObject * m_pTarget;
 	int m_nLife;//寿命
+private:
+
+	
 
 };
 
@@ -58,6 +69,22 @@ private:
 	float m_fPower;
 	CObject ** m_pTarget;
 };
+class CSwarm : public CBullet
+{
+public:
+	CSwarm();
+	~CSwarm();
+	HRESULT Init(void);
+	void Uninit(void);
+	void Update(void);
+	void Draw(void);
+	static CSwarm * Create(D3DXVECTOR3 pos, D3DXVECTOR3 vec, int nLife, TYPE type, int nStop, CObject * Target);
+	void Homing();
+private:
 
+	int m_nStop;
+
+	CObject ** m_pTarget;
+};
 
 #endif // ! _BULLET_H_

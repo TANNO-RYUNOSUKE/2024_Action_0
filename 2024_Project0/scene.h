@@ -64,6 +64,7 @@ public:
 	virtual CPlayer * GetPlayer(void) { return NULL; }
 	virtual CCamera * GetCamera(void) { return NULL; }
 	virtual CMeshfield * GetMeshfield(void) { return NULL; }
+	int m_nFrame;
 private:
 	MODE m_Mode;
 	

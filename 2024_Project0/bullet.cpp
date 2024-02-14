@@ -209,7 +209,7 @@ void CMissile::Homing()
 		float fSpeed = CManager::GetInstance()->GetDistance(GetMove());
 		D3DXVECTOR3 Move = GetMove();
 		D3DXVec3Normalize(&Move, &Move);
-		D3DXVECTOR3 vec = (*m_pTarget)->GetPos() - GetPos();
+		D3DXVECTOR3 vec = ((*m_pTarget)->GetPos() + D3DXVECTOR3(0.0f,50.0f,0.0f)) - GetPos();
 		D3DXVec3Normalize(&vec, &vec);
 
 		Move = VectorToAngles(Move);
@@ -244,6 +244,151 @@ void CMissile::Homing()
 		Move += fRotDiff * m_fPower;
 		Move = AnglesToVector(Move);
 		Move *= m_fSpeed;
+
+		SetMove(Move);
+	}
+}
+
+
+
+CSwarm::CSwarm()
+{
+}
+
+CSwarm::~CSwarm()
+{
+}
+HRESULT CSwarm::Init()
+{
+	m_pColl = NULL;
+	Update();
+	
+	switch (m_Type)
+	{
+	case CBullet::TYPE_NONE:
+		break;
+	case CBullet::TYPE_PLAYER:
+	{
+		CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+		D3DXCOLOR Colo = {};
+		if (pPlayer != NULL)
+		{
+			if (pPlayer->GetRank() < 6)
+			{
+				Colo = D3DXCOLOR(0.3f, 1.0f, 0.7f, 0.5f);
+			}
+			else
+			{
+				Colo = D3DXCOLOR(rand() % 80 * 0.01f + 0.2f, rand() % 80 * 0.01f + 0.2f, rand() % 80 * 0.01f + 0.2f, 1.0f);
+			}
+		}
+		if (true)
+		{
+
+		}
+		m_pColl = CSphereCollision::Create(CSphereCollision::TYPE_AUDIENCEATTACK, 30.0f, 5, VECTO3ZERO, VECTO3ZERO, GetMatrixAddress(), this);
+		m_pOrbit = COrbit::Create(120, Colo, D3DXVECTOR3(1.0f, 0.0f, 0.0f), D3DXVECTOR3(-1.0f, 0.0f, 0.0f), GetMatrixAddress());
+		m_pOrbit2 = COrbit::Create(120, Colo, D3DXVECTOR3(0.0f, 1.0f, 0.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), GetMatrixAddress());
+		break;
+		}
+	case CBullet::TYPE_ENEMY:
+		break;
+	case CBullet::TYPE_MAX:
+		break;
+	default:
+		break;
+	}
+	return S_OK;
+	
+}
+void CSwarm::Uninit()
+{
+	CBullet::Uninit();
+	if (m_pTarget != NULL)
+	{
+		delete m_pTarget;
+		m_pTarget = NULL;
+	}
+}
+void CSwarm::Update()
+{
+	m_nStop--;
+	if (m_nStop > 0)
+	{
+		SetMove(GetMove()*0.8f);
+	}
+	else if (m_nStop == 0)
+	{
+		Homing();
+	}
+	
+	
+	
+	CBullet::Update();
+}
+void CSwarm::Draw()
+{
+	CBullet::Draw();
+}
+CSwarm * CSwarm::Create(D3DXVECTOR3 pos, D3DXVECTOR3 vec, int nLife, TYPE type, int nStop, CObject * Target)
+{
+	CSwarm * pBullet = NULL;
+	pBullet = DBG_NEW  CSwarm;
+
+	pBullet->SetPos(pos);
+	pBullet->SetMove(vec);
+	pBullet->SetLife(nLife);
+	pBullet->m_pTarget = DBG_NEW CObject*;
+	pBullet->m_nStop = nStop;
+
+	pBullet->m_Type = type;
+	*(pBullet->m_pTarget) = Target;
+	pBullet->Init();
+	return pBullet;
+}
+void CSwarm::Homing()
+{
+
+	if (*m_pTarget != NULL)
+	{
+		float fSpeed = CManager::GetInstance()->GetDistance(GetMove());
+		D3DXVECTOR3 Move = GetMove();
+		D3DXVec3Normalize(&Move, &Move);
+		D3DXVECTOR3 vec = ((*m_pTarget)->GetPos() + D3DXVECTOR3(0.0f, 50.0f, 0.0f)) - GetPos();
+		D3DXVec3Normalize(&vec, &vec);
+
+		Move = VectorToAngles(Move);
+
+
+
+
+		D3DXVECTOR3 fRotMove, fRotDest, fRotDiff = {};
+		D3DXVECTOR3 vecEnemy;
+
+		vecEnemy = D3DXVECTOR3(atan2f(vec.y, sqrtf(powf(vec.x, 2.0f) + powf(vec.z, 2.0f))), atan2f(vec.x, vec.z), 0.0f);
+
+		fRotDiff = vecEnemy - Move;
+
+
+		if (fRotDiff.x < -D3DX_PI)
+		{
+			fRotDiff.x += D3DX_PI * 2;
+		}
+		else if (fRotDiff.x > D3DX_PI)
+		{
+			fRotDiff.x += -D3DX_PI * 2;
+		}
+		if (fRotDiff.y < -D3DX_PI)
+		{
+			fRotDiff.y += D3DX_PI * 2;
+		}
+		else if (fRotDiff.y > D3DX_PI)
+		{
+			fRotDiff.y += -D3DX_PI * 2;
+		}
+		Move += fRotDiff;
+		Move = AnglesToVector(Move);
+		Move *= 30.0f;
 
 		SetMove(Move);
 	}

@@ -1,6 +1,6 @@
 sampler2D inputTexture : register(s0);
 
-float threshold = 0.75; // ‚µ‚«‚¢’l
+float threshold = 0.9; // ‚µ‚«‚¢’l
 
 float4 main(float2 texCoord : TEXCOORD0) : COLOR
 {

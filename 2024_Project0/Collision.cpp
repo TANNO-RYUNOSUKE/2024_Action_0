@@ -50,6 +50,11 @@ void CSphereCollision::Collision()
 						CManager::GetInstance()->SetHitStop(3);
 						CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SLASHHIT);
 						CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false, (pCollision->m_Pos + m_Pos)*0.5f + m_knockback, "data\\TEXTURE\\HitEffect.png");
+						CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+						if (pPlayer != NULL)
+						{
+							pPlayer->ScoreUp();
+						}
 					}
 				}
 			}
@@ -65,7 +70,7 @@ void CSphereCollision::Collision()
 				{
 					pCollision->m_pParent->SetLife(pCollision->m_pParent->GetLife() - m_nPower);
 
-					CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_SHOT);
+					
 					CAnimBillboard::Create(m_nPower * 5.0f, m_nPower * 5.0f, 3, 6, 18, 60, false, m_Pos + m_knockback, "data\\TEXTURE\\HitEffect2.png");
 					m_pParent->SetLife(0);
 					return;

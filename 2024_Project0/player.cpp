@@ -28,6 +28,8 @@
 #include "Supporter.h"
 #include "meshfield.h"
 #include "audience.h"
+#include <set>
+
 
 //ƒ}ƒNƒ’è‹`
 #define MOVE_PLAYER (2.0f)
@@ -44,12 +46,12 @@ CPlayer::CPlayer(int nPriority):CObject(nPriority)
 			m_apModel[nCnt] = NULL;
 	
 	}
-
+	m_pEnemy = NULL;
 	SetType(CObject::TYPE_PLAYER);
 
 	m_nLife = 0;
 	m_bShadow = true;
-
+	m_bZ = true;
 	m_pHitCol = NULL;
 }
 //=============================================
@@ -65,9 +67,13 @@ CPlayer::~CPlayer()
 HRESULT CPlayer::Init()
 {
 	m_nLand = 0;
-	m_pTarget = CBillboard::Create(50.0f, 50.0f, GetPos(), "data\\TEXTURE\\target.png");
-	m_nLife = 5;
+
+	m_nScore = 0;
+	m_pTarget = CAnimBillboard::Create(20.0f, 20.0f, 56, 5, 450, 30, true, GetPos(), "data\\TEXTURE\\lock2.jpg"); 
+	//m_pTarget->m_bUI = true;
+	m_nLife = PLAYERLIFE_MAX;
 	m_pEnemy = DBG_NEW CEnemy*;
+	*m_pEnemy = NULL;
 	m_rotDest = VECTO3ZERO;
 	m_pMotion = DBG_NEW CMotion;
 	m_pMotion->SetModel(&m_apModel[0]);
@@ -77,9 +83,19 @@ HRESULT CPlayer::Init()
 	m_pOrbit = NULL;
 	m_pColl = NULL;
 	m_nDamage = 0;
+	m_nRank = 0;
+	m_nRankOld = 0;
 	m_fPower = 0.0f;
 	m_Size = 0.0f;
 	m_attackpos = VECTO3ZERO;
+	m_pRank = CObject2D::Create(D3DXVECTOR3(1000.0f, 200.0f, 0.0f), 125.0f, 125.0f, 6, "data\\TEXTURE\\rank.png");
+	m_pScoreGage = CObject2D::Create(D3DXVECTOR3(950.0f, 270.0f, 0.0f), 10.0f, 125.0f,6,NULL,D3DXVECTOR2(0.0f,0.5f));
+
+	m_pRank->SetDisp(false);
+	for (int i = 0; i < 9; i++)
+	{
+		CAudience::Create();
+	}
 
 	m_pHitCol = CSphereCollision::Create(CSphereCollision::TYPE_PLAYER, 10.0f, 0, VECTO3ZERO, VECTO3ZERO, m_apModel[1]->GetMatrixAddress(), this);
 	return S_OK;
@@ -98,7 +114,6 @@ void CPlayer::Uninit()
 	}
 	if (m_pOrbit != NULL)
 	{
-		m_pOrbit->Release();
 		m_pOrbit = NULL;
 	}
 	if (m_pEnemy != NULL)
@@ -135,6 +150,18 @@ void CPlayer::Update()
 	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
 	CInputMouse * pInputMouse = CManager::GetInstance()->GetInputMouse();
 	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
+	for (int i = 0; i < CAudience::List.GetNum(); i++)
+	{
+		if (i <= m_nRank)
+		{
+			CAudience::List.Get(i)->SetActive(true);
+		}
+		else
+		{
+			CAudience::List.Get(i)->SetActive(false);
+		}
+	}
+	
 	if (pInputMouse->GetPress(CInputMouse::MOUSE_RIGTH) || pInputGamePad->GetPedalR(0))
 	{
 		Lockon();
@@ -155,7 +182,7 @@ void CPlayer::Update()
 	}
 	
 	Action();
-	
+	StylishRank();
 
 	SetPos(GetPos() + GetMove());
 	D3DXVECTOR3 move = GetMove();
@@ -192,6 +219,24 @@ void CPlayer::Update()
 		}
 		SetMove(move);
 	}
+	D3DXVECTOR3 pos = GetPos();
+	if (pos.x > 2000.0f)
+	{
+		pos.x = 2000.0f;
+	}
+	else if (pos.x < -3000.0f)
+	{
+		pos.x = -3000.0f;
+	}
+	if (pos.z > 450.0f)
+	{
+		pos.z = 450.0f;
+	}
+	else if (pos.z < -1000.0f)
+	{
+		pos.z = -1000.0f;
+	}
+	SetPos(pos);
 }
 //=============================================
 //•`‰æŠÖ”
@@ -244,14 +289,76 @@ void CPlayer::Draw()
 	pDevice->SetTransform(D3DTS_WORLD, &m_mtx);
 
 }
-
+void CPlayer::StylishRank()
+{
+	m_nScore--;
+	m_nRankOld = m_nRank;
+	if (m_nScore < 0)
+	{
+		m_nScore = 0;
+	}
+	else if(m_nScore > SCORE_BORDER * 9)
+	{
+		m_nScore = SCORE_BORDER * 9;
+	}
+	m_nRank = m_nScore / SCORE_BORDER;
+	if (m_nRank > 8)
+	{
+		m_nRank = 8;
+	}
+	if (m_nRankOld != m_nRank)
+	{
+		if (m_nRank > 0)
+		{
+			m_pRank->SetWidth(250.0f);
+			m_pRank->SetHeight(250.0f);
+			m_pRank->SetCol(D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f));
+		}
+	
+		if (m_nRankOld < m_nRank)
+		{
+			m_nScore = SCORE_BORDER * m_nRank + SCORE_BORDER * 0.5f;
+			
+		}
+	
+	
+	}
+	if (m_nRank > 0)
+	{
+		m_pScoreGage->SetDisp(true);
+		m_pScoreGage->SetWidth(125.0f * ((float) (m_nScore % SCORE_BORDER) / (float)SCORE_BORDER));
+		m_pRank->SetWidth(m_pRank->GetWidth() + (125.0f - m_pRank->GetWidth())* 0.1f);
+		m_pRank->SetHeight(m_pRank->GetHeight() + (125.0f - m_pRank->GetHeight())* 0.1f);
+		m_pRank->SetCol(m_pRank->GetCol() + (D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f) - m_pRank->GetCol()) * 0.1f);
+	
+		m_pRank->SetDisp(true);
+		m_pRank->SetTexMin(D3DXVECTOR2(1.0f - (1.0f / 8.0f) * (m_nRank), 0.0f));
+		m_pRank->SetTexMax(D3DXVECTOR2(1.0f - (1.0f / 8.0f) * (m_nRank - 1), 1.0f));
+	}
+	else
+	{
+		m_pScoreGage->SetDisp(false);
+		m_pRank->SetTexMin(D3DXVECTOR2(1.0f - (1.0f / 8.0f) * (1), 0.0f));
+		m_pRank->SetTexMax(D3DXVECTOR2(1.0f - (1.0f / 8.0f) * (0), 1.0f));
+		m_pRank->SetWidth(m_pRank->GetWidth() + (12.0f - m_pRank->GetWidth())* 0.1f);
+		m_pRank->SetHeight(m_pRank->GetHeight() + (12.0f - m_pRank->GetHeight())* 0.1f);
+		m_pRank->SetCol(m_pRank->GetCol() + (D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f) - m_pRank->GetCol()) * 0.1f);
+	}
+}
 void CPlayer::Action()
 {
 	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
 	CInputGamePad * pInputGamePad = CManager::GetInstance()->GetInputGamePad();
 	CInputMouse * pInputMouse = CManager::GetInstance()->GetInputMouse();
+
 	m_pMotion->Update();
 	AutoCollisionCreate();
+	m_nMovecount++;
+	if (m_nMovecount > 180 && !m_vActionLog.empty())
+	{
+		m_nMovecount = 0;
+		m_vActionLog.erase(m_vActionLog.begin());
+	}
 	if (m_pMotion->GetType() < MOTION_COMBINATION1 && m_pMotion->GetType() != MOTION_DODGE)
 	{
 		m_bMotionLock = false;
@@ -298,11 +405,14 @@ void CPlayer::Action()
 			if (m_pMotion->GetType() < MOTION_COMBINATION1)
 			{
 				m_pMotion->SetType(MOTION_COMBINATION1);
+				SetLog(MOTION_COMBINATION1);
 
 			}
 			else if (m_pMotion->GetType() < MOTION_MAX - 1)
 			{
+			
 				m_pMotion->SetType(m_pMotion->GetType() + 1);
+				SetLog((MOTION)m_pMotion->GetType());
 			}
 		}
 	}
@@ -395,16 +505,19 @@ void  CPlayer::Command()
 			{
 				Direction();
 				m_pMotion->SetType(MOTION_CHARGE);
+				SetLog((MOTION)m_pMotion->GetType());
 			}
 			if (GetAngleDifference(Vec, -Stick) <= D3DX_PI * 0.5f &&  pInputGamePad->GetTrigger(CInputGamePad::Button_Y, 0) && m_nLand > 0)
 			{
 				Direction();
 				m_pMotion->SetType(MOTION_HIGHROLLER);
+				SetLog((MOTION)m_pMotion->GetType());
 			}
 			if (GetAngleDifference(Vec, -Stick) <= D3DX_PI * 0.5f &&  pInputGamePad->GetTrigger(CInputGamePad::Button_Y, 0) && m_nLand <= 0)
 			{
 				Direction();
 				m_pMotion->SetType(MOTION_SPLIT);
+				SetLog((MOTION)m_pMotion->GetType());
 			}
 		}
 	}
@@ -1125,13 +1238,17 @@ void CPlayer::Mirage()
 	{
 		if (m_apModel[i] != NULL)
 		{
-			CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.25f),12);
+			CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(0.6f, 0.8f, 0.3f, 0.5f),12);
 		}
 
 	}
 }
 bool CPlayer::Damage(int Damage, D3DXVECTOR3 Knockback)
 {
+	if (m_pMotion->GetType() == MOTION_DODGE)
+	{
+		m_nScore += SCORE_BORDER * 0.33f;
+	}
 	if (m_pMotion->GetType() != MOTION_DAMAGE &&m_pMotion->GetType() != MOTION_DODGE)
 	{
 		if (m_pOrbit != NULL)
@@ -1143,9 +1260,34 @@ bool CPlayer::Damage(int Damage, D3DXVECTOR3 Knockback)
 		m_nLife -= Damage;
 		SetMove(GetMove() + Knockback);
 		m_pMotion->SetType(MOTION_DAMAGE);
+		m_nScore *= 0.5f;
 		return true;
 	}
 	return false;
+}
+void  CPlayer::ScoreUp()
+{
+	float bonus = GetActionLogCount();
+	
+	m_nScore += (SCORE_BORDER * 0.1f) * (bonus + 1) / (m_nScore / SCORE_BORDER + 1);
+}
+void  CPlayer::SetLog(MOTION motion)
+{
+	m_nMovecount = 0;
+	m_vActionLog.push_back(motion);
+	if (m_vActionLog.size() > 5)
+	{
+		m_vActionLog.erase(m_vActionLog.begin());
+	}
+}
+int CPlayer::GetActionLogCount()
+{
+	if (!m_vActionLog.empty())
+	{
+		std::set<MOTION> Unique(m_vActionLog.begin(), m_vActionLog.end());
+		return Unique.size();
+	}
+	return 0;
 }
 void CPlayer::Lockon()
 {
@@ -1184,7 +1326,9 @@ void CPlayer::Lockon()
 							fDistance = fDistancecheck;
 							fAngle = fAngleCheck;
 							*m_pEnemy = pEnemy;
-							m_pTarget->SetPos((*m_pEnemy)->GetPos());
+							D3DXMATRIX mtx = (*m_pEnemy)->GetModel()->GetMatrix();
+
+							m_pTarget->SetPos(D3DXVECTOR3(mtx._41, mtx._42, mtx._43));
 						}
 					
 					}
@@ -1241,8 +1385,8 @@ void CPlayer::Lockon()
 			pCamera->SetRDest((GetPos() + pos) * 0.5f);
 		}
 	
-		m_pTarget->SetHeight(m_pTarget->GetHeight() + (50.0f - m_pTarget->GetHeight()) * 0.2f);
-		m_pTarget->SetWidth(m_pTarget->GetWidth() + (50.0f - m_pTarget->GetWidth()) * 0.2f);
+		m_pTarget->SetHeight(m_pTarget->GetHeight() + (25.0f - m_pTarget->GetHeight()) * 0.2f);
+		m_pTarget->SetWidth(m_pTarget->GetWidth() + (25.0f - m_pTarget->GetWidth()) * 0.2f);
 		m_pTarget->SetColor(m_pTarget->GetColor() + (D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f) - m_pTarget->GetColor()) * 0.2f);
 		m_pTarget->SetPos(m_pTarget->GetPos() + (pos - m_pTarget->GetPos()) * 0.3f);
 	}

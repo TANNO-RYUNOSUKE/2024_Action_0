@@ -132,12 +132,18 @@
     <ClInclude Include="bullet.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="effect.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="lifegage.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル\00_Main</Filter>
-    </ClCompile>
-    <ClCompile Include="renderer.cpp">
       <Filter>ソース ファイル\00_Main</Filter>
     </ClCompile>
     <ClCompile Include="debugproc.cpp">
@@ -227,9 +233,27 @@
     <ClCompile Include="bullet.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="effect.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="lifegage.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer.cpp">
+      <Filter>ソース ファイル\00_Main</Filter>
+    </ClCompile>
+    <ClCompile Include="shader.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="data\SHADER\DepthBufShadowEffect.fx">
+      <Filter>エフェクトファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="data\SHADER\BrightCheck.fx">
+      <Filter>エフェクトファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="data\SHADER\Gauss.fx">
       <Filter>エフェクトファイル</Filter>
     </FxCompile>
     <FxCompile Include="data\SHADER\ZTexCreator.fx">

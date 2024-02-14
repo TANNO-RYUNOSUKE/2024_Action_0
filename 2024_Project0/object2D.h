@@ -26,7 +26,7 @@ public:
 	void SetWidth(float fWidth) { m_fWidth = fWidth; }
 	float GetWidth(void) { return m_fWidth; }
 
-	static CObject2D * Create(D3DXVECTOR3 pos, float fHeight, float fWidth,int nPriority = 0,char * pFileName = NULL);
+	static CObject2D * Create(D3DXVECTOR3 pos, float fHeight, float fWidth, int nPriority = 0, char * pFileName = NULL, D3DXVECTOR2 Anchor = {0.5f,0.5f});
 
 	void Set(D3DXVECTOR3 pos, D3DXVECTOR3 rot, float fHeight, float fWidth);
 	void SetVtx(VERTEX_2D  * pVtx);
@@ -39,6 +39,11 @@ public:
 	void SetCol(D3DXCOLOR col) { m_col = col; }
 	void SetDisp(bool bDisp) { m_bDisp = bDisp; }
 	void SetLife(int nLife) { m_nLife = nLife; }
+	D3DXVECTOR2 GetTexMin(void) { return Tex_min; }
+	D3DXVECTOR2 GetTexMax(void) { return Tex_max; }
+	void SetTexMin(D3DXVECTOR2 pos) { Tex_min = pos; }
+	void SetTexMax(D3DXVECTOR2 pos) { Tex_max = pos; }
+	void SetTex(LPDIRECT3DTEXTURE9 tex) { m_pTexture = tex; }
 protected:
 	//ポリゴン表示用
 	LPDIRECT3DTEXTURE9 m_pTexture;	//テクスチャへのポインタ
@@ -48,6 +53,10 @@ private:
 	float m_fWidth;	//幅
 	D3DXCOLOR m_col;//色
 	char * m_pFileName;//名前
+	D3DXVECTOR2 m_Anchor;
+	D3DXVECTOR2 Tex_min;
+	D3DXVECTOR2 Tex_max;
+
 	bool m_bDisp;
 	int m_nLife;
 };

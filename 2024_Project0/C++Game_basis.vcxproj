@@ -128,9 +128,11 @@
     <ClInclude Include="collision.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="DepthShadow.h" />
+    <ClInclude Include="effect.h" />
     <ClInclude Include="enemy.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="lifegage.h" />
     <ClInclude Include="light.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="main.h" />
@@ -146,6 +148,7 @@
     <ClInclude Include="player.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="scene.h" />
+    <ClInclude Include="shader.h" />
     <ClInclude Include="sound.h" />
     <ClInclude Include="Supporter.h" />
     <ClInclude Include="texture.h" />
@@ -162,9 +165,11 @@
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="DepthShadow.cpp" />
+    <ClCompile Include="effect.cpp" />
     <ClCompile Include="enemy.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="input.cpp" />
+    <ClCompile Include="lifegage.cpp" />
     <ClCompile Include="light.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="manager.cpp" />
@@ -179,6 +184,7 @@
     <ClCompile Include="player.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="scene.cpp" />
+    <ClCompile Include="shader.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="supporter.cpp" />
     <ClCompile Include="texture.cpp" />
@@ -187,9 +193,17 @@
     <ClCompile Include="ZTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="data\SHADER\BrightCheck.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="data\SHADER\DepthBufShadowEffect.fx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="data\SHADER\Gauss.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="data\SHADER\ZTexCreator.fx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

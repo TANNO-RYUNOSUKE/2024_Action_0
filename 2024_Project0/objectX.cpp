@@ -29,6 +29,7 @@ CObjectX::CObjectX(int nPriority) : CObject(nPriority)
 	m_vtxMaxModel = D3DXVECTOR3(-1000.0f, -1000.0f, -1000.0f);
 	m_vtxMinModel = D3DXVECTOR3(1000.0f, 1000.0f, 1000.0f);
 	m_bShadow = true;
+	m_bZ = true;
 	m_bLight = true;
 }
 

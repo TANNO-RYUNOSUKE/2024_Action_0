@@ -25,6 +25,8 @@ public:
 	{
 		TYPE_NONE = 0,
 		TYPE_TEST,
+		TYPE_ARMY,
+		TYPE_BOSS,
 		TYPE_MAX
 	};
 	enum STATE
@@ -48,6 +50,7 @@ public:
 	void AddLife(int nAdd) { m_nLife += nAdd; }//ライフに加算
 	virtual bool Damage(int nDamage, D3DXVECTOR3 knockback);
 	void SetState(STATE state, int nCnt) { m_state = state,m_nStateCount = nCnt; }
+
 	static Clist<CEnemy *> EnemyList;
 protected:
 	D3DXVECTOR3 posOld;
@@ -63,6 +66,7 @@ protected:
 	CMotion * m_pMotion;//モーションポインタ
 	CModel * m_apModel[NUM_MODEL];//使用するモデルのポインタ
 	CSphereCollision * m_pCollision;
+	TYPE m_type;
 private:
 	
 };
@@ -142,6 +146,55 @@ private:
 	ROUTINE m_Routine;
 	COrbit * m_pOrbit;
 	int m_nRoutineCount;
+	CSphereCollision * m_pAttackCollision;
+
+};
+//エネミー(ボス)
+class CEnemy_Boss : public CEnemy
+{
+public:
+	CEnemy_Boss();
+	~CEnemy_Boss();
+	enum MOTION
+	{
+		MOTION_NONE = 0,
+		MOTION_ROTATION,
+		MOTION_WALK,
+		MOTION_ATTACK,
+		MOTION_JUMP,
+		
+		MOTION_MAX
+	};
+	enum ROUTINE
+	{
+		ROUTINE_WAIT = 0,
+		ROUTINE_FORWARD,
+		ROUTINE_ROTATION,
+		ROUTINE_ATTACK,
+		ROUTINE_JUMP,
+		ROUTINE_CHARGE,
+		ROUTINE_FALLDOWN,
+		ROUTINE_BEAM,
+		ROUTINE_MAX
+	};
+	HRESULT Init(void);
+	void Uninit(void);
+	void Update(void);
+	void Draw(void);
+	void Walk();
+	void Jump();
+	void Fall();
+	void Charge();
+	void Beam();
+	void Attack();
+	bool Damage(int nDamage, D3DXVECTOR3 knockback);
+	static CEnemy_Boss * Create(D3DXVECTOR3 pos, int nLife);
+	void SetRoutine(ROUTINE Routine, int nCnt) { m_Routine = Routine; m_nRoutineCount = nCnt; }
+private:
+	ROUTINE m_Routine;
+	int m_nRoutineCount;
+	bool m_bTrigger;
+	D3DXVECTOR3 m_vec;
 	CSphereCollision * m_pAttackCollision;
 
 };

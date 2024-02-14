@@ -12,6 +12,7 @@
 #include "ZTexture.h"
 #include "DepthShadow.h"
 #include "player.h"
+#include "shader.h"
 //=============================================
 //コンストラクタ
 //=============================================
@@ -102,9 +103,51 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 	m_pD3DDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
 
 	//各種オブジェクト初期化処理はここ
+	
+	m_pD3DDevice->CreateTexture(
+		(SCREEN_WIDTH),          // テクスチャの幅
+		(SCREEN_HEIGHT),          // テクスチャの高さ
+		0,              // ミップマップ レベル
+		D3DUSAGE_RENDERTARGET,
+		D3DFMT_X8R8G8B8, // フォーマット
+		D3DPOOL_DEFAULT, // プール
+		&pSceneTexture,  // テクスチャ オブジェクト
+		NULL);
+	m_pD3DDevice->CreateTexture(
+		(160),          // テクスチャの幅
+		(90),          // テクスチャの高さ
+		0,              // ミップマップ レベル
+		D3DUSAGE_RENDERTARGET,
+		D3DFMT_X8R8G8B8, // フォーマット
+		D3DPOOL_DEFAULT, // プール
+		&pBloomTexture,  // テクスチャ オブジェクト
+		NULL);
+	m_pScreen = CObject2D::Create(SCREEN_CENTER, SCREEN_HEIGHT, SCREEN_WIDTH);
+	m_pScreen->m_bDraw = false;
+	m_pScreen->m_bAutoRelease = false;
+	m_pScreen->SetTex(pSceneTexture);
+	m_pBloom = CObject2D::Create(SCREEN_CENTER, SCREEN_HEIGHT, SCREEN_WIDTH);
+	m_pBloom->m_bDraw = false;
+	m_pBloom->m_bAutoRelease = false;
+	m_pBloom->SetTex(pBloomTexture);
+	m_pBlomMini = CObject2D::Create(VECTO3ZERO, SCREEN_HEIGHT / 8, SCREEN_WIDTH / 8, 0, NULL, D3DXVECTOR2(0.0f, 0.0f));
+	m_pBlomMini->m_bDraw = false;
+	m_pBlomMini->m_bAutoRelease = false;
+	m_pBlomMini->SetTex(pBloomTexture);
 
 
+	Vdest = {};
+	Rdest = {};
+	V = {};
+	R = {};
+	
+		V = (D3DXVECTOR3(0.0f, 500.0f, 0.0f));
+		R = (D3DXVECTOR3(10.0f, -10.0f, 0.0f));
+	
+	
 	// シェーダー用の初期化は以下
+		Loadshader("data\\SHADER\\BrightCheck.fx", &pEffectBrightCheck);
+		Loadshader("data\\SHADER\\Gauss.fx", &pGauss);
 	// Z値テクスチャ生成オブジェクトの生成と初期化
 	m_pDev = m_pD3DDevice;
 	D3DXCreateSprite(m_pD3DDevice, &m_pSprite);// スプライト作成
@@ -173,8 +216,10 @@ void CRenderer::Update(void)
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	if (pPlayer != NULL)
 	{
-		D3DXVECTOR3 V = (D3DXVECTOR3(0.0f, 500.0f, 0.0f) + pPlayer->GetPos());
-		D3DXVECTOR3 R = (D3DXVECTOR3(10.0f, -10.0f, 0.0f) + pPlayer->GetPos());
+		 Vdest = (D3DXVECTOR3(0.0f, 750.0f, 0.0f) + pPlayer->GetPos());
+		 Rdest = (D3DXVECTOR3(10.0f, -10.0f, 0.0f) + pPlayer->GetPos());
+		 V = (V + (Vdest - V)* 0.01f);
+		 R = (R + (Rdest - R)* 0.1f);
 		D3DXMatrixLookAtLH(&LightView, &V, &R, &D3DXVECTOR3(0, 1, 0));
 		m_pDepthShadow->SetLightpos(V);
 		m_pDepthShadow->SetLightSeepos(R);
@@ -193,23 +238,90 @@ void CRenderer::Update(void)
 void CRenderer::Draw(void)
 {
 	CDebugProc * pDeb = CManager::GetInstance()->GetDeb();
+	//描画サーフェイス取得
+	IDirect3DSurface9* pBackBuffer;
+	m_pD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+	IDirect3DSurface9* pRenderTarget;
+	IDirect3DSurface9* pBloomBuffer;
+	pSceneTexture->GetSurfaceLevel(0, &pRenderTarget);
+	pBloomTexture->GetSurfaceLevel(0, &pBloomBuffer);
+	m_pD3DDevice->SetRenderTarget(0, pBackBuffer);
 	//画面クリア
 	m_pD3DDevice->Clear(0, NULL, (D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER), D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
 
 	//描画開始
 	if (SUCCEEDED(m_pD3DDevice->BeginScene()))
 	{//成功した場合
-		CObject::DrawAll();
+		m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+		m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
 		m_pZTex->Begin();
-		CObject::DrawAll();
+		CObject::Draw3D();
 		m_pZTex->End();
-	
 		m_pDepthShadow->Begin();
-		CObject::DrawAll();
+		CObject::Draw3D();
 		m_pDepthShadow->End();
 		// オブジェクトの全描画
-		CObject::DrawAll();
+		CObject::Draw3D();
 
+		// テクスチャサンプリングステートを設定
+		m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP); // U方向のラッピングを無効化
+		m_pD3DDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP); // V方向のラッピングを無効化
+
+		// 一定以上の輝度を抜き出す
+
+		m_pD3DDevice->SetRenderTarget(0, pBloomBuffer);
+
+		m_pZTex->Begin();
+		CObject::Draw3D();
+		m_pZTex->End();
+		m_pDepthShadow->Begin();
+		CObject::Draw3D();
+		m_pDepthShadow->End();
+		// オブジェクトの全描画
+		CObject::Draw3D();
+
+		m_pD3DDevice->SetRenderTarget(0, pBloomBuffer);
+		// 固定機能に戻す
+		m_pD3DDevice->SetVertexShader(NULL);
+		m_pD3DDevice->SetPixelShader(NULL);
+		pEffectBrightCheck->Begin(NULL, 0);
+		pEffectBrightCheck->BeginPass(0);
+		pEffectBrightCheck->SetTechnique("brightcheck");
+	
+		m_pBlomMini->Draw();
+	
+		pEffectBrightCheck->EndPass();
+		pEffectBrightCheck->End();
+		// 固定機能に戻す
+		m_pD3DDevice->SetVertexShader(NULL);
+		m_pD3DDevice->SetPixelShader(NULL);
+
+
+		m_pD3DDevice->SetRenderTarget(0, pRenderTarget);
+		// ガウスぼかしを適用
+		pGauss->Begin(NULL, 1);
+		pGauss->BeginPass(0);
+		pGauss->SetTechnique("GaussianBlur");
+		pGauss->SetTexture("InputTexture", pBloomTexture);
+		m_pBloom->Draw();
+		pGauss->EndPass();
+		pGauss->End();
+		// 固定機能に戻す
+		m_pD3DDevice->SetVertexShader(NULL);
+		m_pD3DDevice->SetPixelShader(NULL);
+	
+
+
+		m_pD3DDevice->SetRenderTarget(0,pBackBuffer);
+		m_pD3DDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+		m_pD3DDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+		m_pD3DDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+		m_pScreen->Draw();
+		m_pD3DDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+		m_pD3DDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+		m_pD3DDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
+		CObject::DrawUI();
 		D3DXMATRIX SpriteScaleMat;
 		D3DXMatrixScaling(&SpriteScaleMat, 0.125f, 0.125f, 1.0f);
 		m_pSprite->SetTransform(&SpriteScaleMat);

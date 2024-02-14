@@ -11,11 +11,12 @@ sampler tex0 : register(s0);		// オブジェクトのテクスチャー
 texture texShadowMap;				// シャドウマップテクスチャ
 float  m_Near = 0.0f;             //フォグの開始位置
 float  m_Far = 5000.0f;             //フォグの終了位置
-float m_fHigh = 3000.0f;
+float m_fHigh = 500.0f;
 float m_fLow = 0.0f;
 float m_dot;
-float4 m_FogColor = float4(0.125f, 0.125f, 0.25f, 1.0f);
-float4 m_FogColor2 = float4(0.05f, 0.05f, 0.1f, 1.0f);
+float4 m_FogColor = float4(0.1f, 0.1f, 0.2f, 1.0f);
+float4 m_FogColor2 = float4(0.3f, 0.3f, 0.4f, 1.0f);
+
 sampler DefSampler = sampler_state	// サンプラーステート
 {
     texture = (texShadowMap);
@@ -86,6 +87,7 @@ float4 DepthBufShadow_PS( float4 Col : COLOR, float4 ZCalcTex : TEXCOORD1 , VS_O
 	Col = (In.Col * tex2D(tex0, In.Tex));
 	}
 	Col.b *= 1.2;
+
 	Col.r *= 0.95;
 
    // テクスチャ座標に変換
@@ -96,7 +98,7 @@ float4 DepthBufShadow_PS( float4 Col : COLOR, float4 ZCalcTex : TEXCOORD1 , VS_O
    if (TransTexCoord.x >1.0f || TransTexCoord.x < 0.0f || TransTexCoord.y >1.0f || TransTexCoord.y < 0.0f )
    {
 
-	   Col.rgb = Col.rgb * 0.1f;
+	   Col.rgb = Col.rgb * 0.25f;
 	  
 
 	   Col = Col * f + m_FogColor * (1.0f - f);
@@ -119,7 +121,7 @@ float4 DepthBufShadow_PS( float4 Col : COLOR, float4 ZCalcTex : TEXCOORD1 , VS_O
   // color.r + (color.g + (color.b + color.a / 256.0f) / 256.0f) / 256.0f;
    // 算出点がシャドウマップのZ値よりも大きければ影と判断
    if( ZValue > SM_Z+0.00005f || angle < 0.925f){
-     Col.rgb = Col.rgb * 0.1f;
+     Col.rgb = Col.rgb * 0.25f;
 	
     }
 

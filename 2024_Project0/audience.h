@@ -42,15 +42,28 @@ public:
 	static Clist<CAudience *> List;
 	static void SetStateAll(STATE state, int nCnt);
 	void SetState(STATE state, int nCnt) { m_state = state, m_nStateCount = nCnt; }
+	STATE GetState() { return m_state; }
+	void MissileShower();
+	void Concession();
+	void Swarm();
+
+	void SetActive(bool active) {m_bActive = active;}
 private:
+	typedef void(CAudience::*FunctionPointer)(void);
+	FunctionPointer m_pAutoAttack;
+	FunctionPointer m_pActiveAttack;
 	int m_nBorder;
 	int m_nStateCount;
 	STATE m_state;
 	CObjectX * m_pModel;
+	D3DXVECTOR3 m_Offset;
+	int m_nOffsetCount;
 	D3DXVECTOR3 m_PosDest;
 	D3DXVECTOR3 m_RotDest;
 	COrbit * m_pOrbit;
 	COrbit * m_pOrbit2;
+	bool m_bActive;
+
 };
 
 #endif // ! _Audience_H_

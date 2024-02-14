@@ -57,7 +57,10 @@ CObject::CObject(int nPriority)
 			break;
 		}
 	}*/
+	m_bDraw = true;
 	m_bShadow = false;
+	m_bAutoRelease = true;
+	m_bZ = false;
 	m_Type = TYPE_NONE;
 	m_pos = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_rot = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
@@ -66,7 +69,7 @@ CObject::CObject(int nPriority)
 	{
 		m_nIdxTex[i] = -1;
 	}
-
+	m_bUI = false;
 	
 }
 //=============================================
@@ -118,7 +121,10 @@ void CObject::ReleaseAll(void)
 		while (pObject != NULL)
 		{
 			m_pStaticNext = pObject->m_pNext;
-			pObject->Release();
+			if (pObject->m_bAutoRelease)
+			{
+				pObject->Release();
+			}
 			pObject = m_pStaticNext;
 		}
 	}
@@ -154,6 +160,11 @@ void CObject::UpDateAll(void)
 //=============================================
 void CObject::DrawAll(void)
 {
+	Draw3D();
+	DrawUI();
+}
+void CObject::Draw3D(void)
+{
 	CCamera * pCamera = CManager::GetInstance()->GetScene()->GetCamera();
 	if (pCamera != NULL)
 	{
@@ -166,26 +177,45 @@ void CObject::DrawAll(void)
 		while (pObject != NULL)
 		{
 			m_pStaticNext = pObject->m_pNext;
-			if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
-			{// オブジェクトの描画
-				if (pObject->m_bShadow)
-					pObject->Draw();
-			}
-			else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
-			{// オブジェクトの描画
-				if (pObject->m_bShadow)
-					pObject->Draw();
-			}
-			else
+			if (pObject->m_bDraw && !pObject->m_bUI)
 			{
-				if (!pObject->m_bShadow)
-					pObject->Draw();
+				if (CManager::GetInstance()->GetRenderer()->GetZShader()->GetbPass())
+				{// オブジェクトの描画
+					if (pObject->m_bZ)
+						pObject->Draw();
+				}
+				else if (CManager::GetInstance()->GetRenderer()->GetDepthShader()->GetbPass())
+				{// オブジェクトの描画
+					if (pObject->m_bShadow)
+						pObject->Draw();
+				}
+				else
+				{
+					if (!pObject->m_bShadow)
+						pObject->Draw();
+				}
 			}
 			pObject = m_pStaticNext;
 		}
 	}
 }
-
+void CObject::DrawUI(void)
+{
+	CObject * pObject;
+	for (int nPriority = 0; nPriority < NUM_PRIORITY; nPriority++)
+	{
+		pObject = m_apTop[nPriority];
+		while (pObject != NULL)
+		{
+			m_pStaticNext = pObject->m_pNext;
+			if (pObject->m_bDraw && pObject->m_bUI)
+			{		
+				pObject->Draw();
+			}
+			pObject = m_pStaticNext;
+		}
+	}
+}
 D3DXVECTOR3 CObject::GetPos() 
 { 
 	return m_pos; 

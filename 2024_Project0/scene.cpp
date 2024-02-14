@@ -26,6 +26,8 @@
 #include "objectX.h"
 #include "texture.h"
 #include "audience.h"
+#include "effect.h"
+#include "lifegage.h"
 CFade * CScene::m_pFade = NULL;
 //=============================================
 //コンストラクタ
@@ -33,6 +35,7 @@ CFade * CScene::m_pFade = NULL;
 CScene::CScene()
 {
 	m_Mode = MODE_NONE;
+	m_nFrame = 0;
 }
 //=============================================
 //デストラクタ
@@ -222,11 +225,14 @@ HRESULT CGame::Init()
 	pTex->Regist("data\\TEXTURE\\HitEffect2.png");
 
 	CEnemy_army::Create(D3DXVECTOR3(0.0f,0.0f,500.0f), 150);
+	CEnemy_Boss::Create(D3DXVECTOR3(0.0f, 0.0f, -1500.0f), 150);
 
 	CSound * pSound = CManager::GetInstance()->GetSound();
 	pSound->Play(CSound::SOUND_LABEL_BGM_ZONE);
+	CGage::Create(D3DXVECTOR3(65.0f, 65.0f, 0.0f), 377.0f, PLAYERLIFE_MAX);
 
-	CAudience::Create();
+	CObject2D::Create(D3DXVECTOR3(250.0f, 60.0f, 0.0f), 59.0f, 413.0f, 6, "data\\TEXTURE\\life.png");
+
 	return S_OK;
 	
 }
@@ -260,14 +266,23 @@ void CGame::Uninit()
 void CGame::Update()
 {
 	CDebugProc * pDeb = CManager::GetInstance()->GetDeb();
-	m_nCnt++;
-	if (m_nCnt % (5 * 60)== 0 && m_nEnemyCount < 6)
+	if (!CManager::GetInstance()->GetPause())
 	{
-		D3DXVECTOR3 pos = D3DXVECTOR3(rand() % 10000 * 0.1f, 0.0f, rand() % 10000 * 0.1f);
-		CEnemy_army::Create(pos, 200);
-		CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
-		CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
-		m_nEnemyCount++;
+		m_nCnt++;
+		if (m_nCnt % (5 * 60) == 0 && m_nEnemyCount < 6)
+		{
+			D3DXVECTOR3 pos = D3DXVECTOR3((rand() % 10000 -5000) * 0.1f, 0.0f, (rand() % 10000 - 5000) * 0.1f);
+			CEnemy_army::Create(pos, 200);
+			CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
+			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
+			m_nEnemyCount++;
+		}
+		if (m_nCnt % 10 == 0 && m_pPlayer != NULL)
+		{
+			D3DXVECTOR3 pos = D3DXVECTOR3((rand() % 10000 - 5000) * 0.1f, (rand() %  5000) * 0.1f, (rand() % 10000 - 5000) * 0.1f) + m_pPlayer->GetPos();
+			D3DXVECTOR3 move = D3DXVECTOR3((rand() % 10 - 5) * 0.1f, (rand() % 10) * 0.1f, (rand() % 10 - 5) * 0.1f);
+			CEffect::Create(pos, move, rand() % 300 + 60, D3DXCOLOR(0.6f, 0.6f, 0.8f, 1.0f), (rand() % 10) * 0.1f + 1.0f, (rand() % 100 - 50) * 0.0001f + 1.0f);
+		}
 	}
 	m_pCamera->Update();
 	m_pLight->Update();

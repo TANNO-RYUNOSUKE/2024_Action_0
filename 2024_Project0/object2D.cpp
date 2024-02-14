@@ -18,11 +18,16 @@ CObject2D::CObject2D(int nPriority) : CObject(nPriority)
 {
 	m_pTexture = NULL;
 	m_pVtxBuff = NULL;
+	Tex_min = D3DXVECTOR2(0.0f, 0.0f);
+	Tex_max = D3DXVECTOR2(1.0f, 1.0f);
 	m_col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	m_fHeight = 0.0f;
 	m_nLife = -1000;
 	m_fWidth = 0.0f;
 	m_pFileName = NULL;
+	m_bUI = true;
+	m_Anchor = { 0.5f,0.5f };
+	
 }
 
 
@@ -97,7 +102,7 @@ HRESULT CObject2D::Init(void)
 //=============================================
 //生成関数
 //=============================================
-CObject2D * CObject2D::Create(D3DXVECTOR3 pos, float fHeight, float fWidth, int nPriority,char * pFileName)
+CObject2D * CObject2D::Create(D3DXVECTOR3 pos, float fHeight, float fWidth, int nPriority,char * pFileName, D3DXVECTOR2 Anchor)
 {
 	CObject2D * pObject2D = NULL;
 	pObject2D = DBG_NEW  CObject2D(nPriority);
@@ -105,6 +110,7 @@ CObject2D * CObject2D::Create(D3DXVECTOR3 pos, float fHeight, float fWidth, int 
 	pObject2D->SetHeight(fHeight);
 	pObject2D->SetWidth(fWidth);
 	pObject2D->m_pFileName = pFileName;
+	pObject2D->m_Anchor = Anchor;
 	pObject2D->Init();
 	return pObject2D;
 }
@@ -168,10 +174,7 @@ void CObject2D::Draw(void)
 		LPDIRECT3DDEVICE9 pDevice; //デバイスのポインタ
 		pDevice = pRenderer->GetDevice();
 
-		//aブレンディングを通常に設定
-		pDevice->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
-		pDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-		pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
 
 		//頂点バッファをデータストリームに設定
 		pDevice->SetStreamSource(0, m_pVtxBuff, 0, sizeof(VERTEX_2D));
@@ -180,8 +183,16 @@ void CObject2D::Draw(void)
 		pDevice->SetFVF(FVF_VERTEX_2D);
 
 		//テクスチャの設定
-		pDevice->SetTexture(0, pTex->Getaddress(m_nIdxTex[0]));
+		if (m_pTexture != NULL)
+		{
+			pDevice->SetTexture(0, m_pTexture);
+		}
+		else
+		{
+			pDevice->SetTexture(0, pTex->Getaddress(m_nIdxTex[0]));
 
+		}
+		
 		//ポリゴンの描画
 		pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
@@ -204,23 +215,23 @@ void CObject2D::Draw(void)
  {
 	 D3DXVECTOR3 pos = GetPos();
 	 D3DXVECTOR3 rot = GetRot();
-	 float fLength = sqrtf(m_fWidth * m_fWidth + m_fHeight * m_fHeight) * 0.5f;
+	 float fLength = sqrtf(m_fWidth * m_fWidth + m_fHeight * m_fHeight);
 	 float fAngle = atan2f(m_fWidth, m_fHeight);
 
-	 pVtx[0].pos.x = pos.x + sinf(rot.z - D3DX_PI + fAngle)*fLength;
-	 pVtx[0].pos.y = pos.y + cosf(rot.z - D3DX_PI + fAngle)*fLength;
+	 pVtx[0].pos.x = pos.x + sinf(rot.z - D3DX_PI + fAngle)*fLength * m_Anchor.x;
+	 pVtx[0].pos.y = pos.y + cosf(rot.z - D3DX_PI + fAngle)*fLength * m_Anchor.y;
 	 pVtx[0].pos.z = 0.0f;
 
-	 pVtx[1].pos.x = pos.x + sinf(rot.z + D3DX_PI - fAngle)*fLength;
-	 pVtx[1].pos.y = pos.y + cosf(rot.z + D3DX_PI - fAngle)*fLength;
+	 pVtx[1].pos.x = pos.x + sinf(rot.z + D3DX_PI - fAngle)*fLength* (1.0f - m_Anchor.x);
+	 pVtx[1].pos.y = pos.y + cosf(rot.z + D3DX_PI - fAngle)*fLength * m_Anchor.y;
 	 pVtx[1].pos.z = 0.0f;
 
-	 pVtx[2].pos.x = pos.x + sinf(rot.z - fAngle)*fLength;
-	 pVtx[2].pos.y = pos.y + cosf(rot.z - fAngle)*fLength;
+	 pVtx[2].pos.x = pos.x + sinf(rot.z - fAngle)*fLength* m_Anchor.x;
+	 pVtx[2].pos.y = pos.y + cosf(rot.z - fAngle)*fLength *(1.0f - m_Anchor.y);
 	 pVtx[2].pos.z = 0.0f;
 
-	 pVtx[3].pos.x = pos.x + sinf(rot.z + fAngle)*fLength;
-	 pVtx[3].pos.y = pos.y + cosf(rot.z + fAngle)*fLength;
+	 pVtx[3].pos.x = pos.x + sinf(rot.z + fAngle)*fLength* (1.0f - m_Anchor.x);
+	 pVtx[3].pos.y = pos.y + cosf(rot.z + fAngle)*fLength* (1.0f - m_Anchor.y);
 	 pVtx[3].pos.z = 0.0f;
 
 	 //頂点カラーの設定
@@ -228,4 +239,10 @@ void CObject2D::Draw(void)
 	 pVtx[1].col = m_col;
 	 pVtx[2].col = m_col;
 	 pVtx[3].col = m_col;
+
+	 //テクスチャ座標
+	 pVtx[0].tex = D3DXVECTOR2(Tex_min.x, Tex_min.y);
+	 pVtx[1].tex = D3DXVECTOR2(Tex_max.x, Tex_min.y);
+	 pVtx[2].tex = D3DXVECTOR2(Tex_min.x, Tex_max.y);
+	 pVtx[3].tex = D3DXVECTOR2(Tex_max.x, Tex_max.y);
  }															

@@ -63,6 +63,7 @@ public:
 	static CFade * m_pFade;
 	virtual CPlayer * GetPlayer(void) { return NULL; }
 	virtual CCamera * GetCamera(void) { return NULL; }
+	virtual int GetWave() { return -1; }
 	virtual CMeshfield * GetMeshfield(void) { return NULL; }
 	int m_nFrame;
 private:
@@ -130,7 +131,7 @@ public:
 	 CMeshfield * GetMeshfield(void) { return m_pMeshfield; }
 	 CCamera * GetCamera(void) { return m_pCamera; }
 
-
+	 int GetWave() { return m_nWaveCount; }
 	 void SetPlayer(CPlayer * pPlayer) { m_pPlayer = pPlayer; }
 private:
 	
@@ -139,9 +140,10 @@ private:
 	 CCamera * m_pCamera;//カメラのポインタ
 	 CLight * m_pLight;//ライトのポインタ
 	 CMeshfield * m_pMeshfield;//メッシュフィールドへのポインタ
-
+	 int m_nEnemy;
 	int m_nCnt;
 	int m_nEnemyCount;
+	int m_nWaveCount;
 	bool b_Pause;//ポーズ
 };
 

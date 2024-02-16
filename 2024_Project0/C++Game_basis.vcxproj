@@ -130,6 +130,7 @@
     <ClInclude Include="DepthShadow.h" />
     <ClInclude Include="effect.h" />
     <ClInclude Include="enemy.h" />
+    <ClInclude Include="explosion.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="lifegage.h" />
@@ -167,6 +168,7 @@
     <ClCompile Include="DepthShadow.cpp" />
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="enemy.cpp" />
+    <ClCompile Include="explosion.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lifegage.cpp" />

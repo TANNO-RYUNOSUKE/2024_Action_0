@@ -15,6 +15,8 @@
 #include "billboard.h"
 #include "animbillboard.h"
 #include "object2D.h"
+
+#include "lifegage.h"
 #include <vector>
 //É}ÉNÉçíËã`
 #define GRAVITY (0.4f)
@@ -142,6 +144,7 @@ private:
 	int m_nScore;
 	int m_nRank;
 	int m_nRankOld;
+	CGage * pGage;
 	std::vector<MOTION> m_vActionLog;
 
 };

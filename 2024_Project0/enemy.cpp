@@ -14,9 +14,12 @@
 #include "player.h"
 #include "animbillboard.h"
 #include "sound.h"
+#include "lifegage.h"
 #include "player.h"
 #include "camera.h"
+#include "bullet.h"
 #include "Supporter.h"
+#include "explosion.h"
 
 Clist<CEnemy *> CEnemy::EnemyList = {};
 //=============================================
@@ -105,21 +108,23 @@ void CEnemy::Update()
 		CAnimBillboard::Create(fSize, fSize, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
 	}
 	pos = GetPos();
-	if (pos.x > 2000.0f)
+	
+
+	if (pos.x > 1200.0f)
 	{
-		pos.x = 2000.0f;
+		pos.x = 1200.0f;
 	}
-	else if (pos.x < -3000.0f)
+	else if (pos.x < -800.0f)
 	{
-		pos.x = -3000.0f;
+		pos.x = -800.0f;
 	}
-	if (pos.z > 450.0f)
+	if (pos.z > 16000.0f)
 	{
-		pos.z = 450.0f;
+		pos.z = 16000.0f;
 	}
-	else if (pos.z < -1000.0f)
+	else if (pos.z < -5500.0f)
 	{
-		pos.z = -1000.0f;
+		pos.z = -5500.0f;
 	}
 	SetPos(pos);
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
@@ -501,7 +506,6 @@ void CEnemy_army::Uninit()
 void CEnemy_army::Update()
 {
 
-	CEnemy::Update();
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
 
@@ -520,7 +524,7 @@ void CEnemy_army::Update()
 			D3DXVec3Normalize(&vec, &vec);
 			SetMove(GetMove() + vec * 0.2f);
 			m_rotDest.y = atan2f(-vec.x, -vec.z);
-			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
+			SetRot(GetRot() + (m_rotDest - GetRot()) * 0.3f);
 			m_pMotion->SetType(MOTION_WALK);
 
 			break;
@@ -545,14 +549,7 @@ void CEnemy_army::Update()
 
 	}
 
-	SetPos(GetPos() + GetMove());
-	D3DXVECTOR3 move = GetMove();
 	
-	move.x *= 0.9f;
-	move.z *= 0.9f;
-	
-	
-	SetMove(move);
 	D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
 	vec.y = 0.0f;
 	m_pMotion->Update();
@@ -584,19 +581,25 @@ void CEnemy_army::Update()
 			m_pOrbit = NULL;
 		}
 	}
-	if (pMesh != NULL)
-	{
+
 
 		D3DXVECTOR3 move = GetMove();
 		move.y -= GRAVITY;
-		if (pMesh->Collision(GetPosAddress()))
+		if (GetPos().y <= 0.0f)
 		{
-			move.y = 0.0f;
+			D3DXVECTOR3 pos = GetPos();
+			pos.y = 0.0f;
+			if (move.y < 0.0f)
+			{
+				move.y = 0.0f;
+			}
+		
+			SetPos(pos);
 		}
 
 		SetMove(move);
-	}
-	//CEnemy::Update();
+	
+	CEnemy::Update();
 }
 
 //=============================================
@@ -711,14 +714,15 @@ HRESULT CEnemy_Boss::Init()
 	CEnemy::Init();
 	m_pMotion->Load("data\\TEXT\\motion_boss.txt");
 	m_pMotion->SetType(0);
-	
+	m_nCoolTime = 0;
+		m_bMotionLock = false;
 	m_pCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMY, 200.0f, 0, D3DXVECTOR3(0.0f, 0.0f, 0.0f), VECTO3ZERO, m_apModel[0]->GetMatrixAddress(), this);
 	m_pAttackCollision = NULL;
 	m_posDest.x = GetPos().x;
 	m_posDest.z = GetPos().z;
 	m_posDest.y = GetPos().y;
 	m_rotDest = (D3DXVECTOR3(0.0f, D3DX_PI*0.5f, 0.0f));
-
+	m_pGage = CGage::Create(D3DXVECTOR3(14.0f,650.0f, 0.0f), 1000.0f, m_nLife);
 	m_nRoutineCount = 0;
 	m_Routine = ROUTINE_WAIT;
 	return S_OK;
@@ -746,51 +750,104 @@ void CEnemy_Boss::Update()
 	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
 
 	
+	m_pGage->SetData(m_nLife);
 
-
-
+	m_nCoolTime--;
 	D3DXVECTOR3 vec = pPlayer->GetPos() - GetPos();
+	float fDis = GetDistance(vec);
+	D3DXVec3Normalize(&vec, &vec);
 	vec.y = 0.0f;
-	switch (m_Routine)
+	if (fDis < 500.0f )
 	{
-	case CEnemy_Boss::ROUTINE_WAIT:
-		m_pMotion->SetType(MOTION_NONE);
-		break;
-	case CEnemy_Boss::ROUTINE_FORWARD:
-		m_pMotion->SetType(MOTION_WALK);
-		vec.y = 0.0f;
-		D3DXVec3Normalize(&vec, &vec);
+
+		if (m_nCoolTime <= 0 && !m_bMotionLock && m_bLand)
+		{
+			m_nCoolTime = 120;
+			if (rand() % 2 == 0)
+			{
+				m_pMotion->SetType(MOTION_ATTACK);
+			}
+			else
+			{
+				m_pMotion->SetType(MOTION_JUMP);
+			}
+		}
+	}
+	else if(fDis > 1500.0f)
+	{
+		if (m_nCoolTime <= 0 && m_bLand)
+		{
+			if (rand() % 2 == 0)
+			{
+				m_bTrigger = true;
+				m_pMotion->SetType(MOTION_WALK);
+				m_nCoolTime = 60;
+			}
+			else
+			{
+				m_pMotion->SetType(MOTION_NONE);
+				CAnimBillboard::Create(800.0f, 800.0f, 34, 5, 170, 60, false, GetPos() + m_apModel[0]->GetPos(), "data\\TEXTURE\\beams_00000.jpg");
+				CExplosion::Create(pPlayer->GetPos(), 120);
+				CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_BEAM);
+				m_nCoolTime = 300;
+
+
+			}
+		}
+	}
+	else
+	{
+		if (m_nCoolTime <=0)
+		{
+			CMissile::Create(GetPos() + m_apModel[0]->GetPos(), vec, 150, CBullet::TYPE_ENEMY, 7.0f, 0.05f, pPlayer);
+			m_nCoolTime = 20;
+		}
+		
+	}
+	
+	switch (m_pMotion->GetType())
+	{
+	case MOTION_ROTATION:
+	{
+		if (m_pAttackCollision != NULL)
+		{
+			delete m_pAttackCollision;
+			m_pAttackCollision = NULL;
+		}
+		m_bMotionLock = false;
 		SetMove(GetMove() + vec * 0.2f);
 		m_rotDest.y = atan2f(-vec.x, -vec.z);
-		SetRot(GetRot() + (m_rotDest - GetRot()) * 0.05f);
+		D3DXVECTOR3 animRot = m_rotDest - GetRot();
+		if (animRot.y < -D3DX_PI)
+		{
+			animRot.y += D3DX_PI * 2;
+		}
+		else if (animRot.y > D3DX_PI)
+		{
+			animRot.y += -D3DX_PI * 2;
+		}
+		SetRot(GetRot() + animRot * 0.05f);
+	}
 		break;
-	case CEnemy_Boss::ROUTINE_ROTATION:
-		m_rotDest.y = atan2f(-vec.x, -vec.z);
-		SetRot(GetRot() + (m_rotDest - GetRot()) * 0.05f);
-		m_pMotion->SetType(MOTION_ROTATION);
-		break;
-	case CEnemy_Boss::ROUTINE_ATTACK:
+	case MOTION_ATTACK:
 		Attack();
 		break;
-	case CEnemy_Boss::ROUTINE_JUMP:
+	case MOTION_JUMP:
 		Jump();
 		break;
-	case CEnemy_Boss::ROUTINE_CHARGE:
+	case MOTION_WALK:
 		Charge();
-		break;
-	case CEnemy_Boss::ROUTINE_FALLDOWN:
-		Jump();
-		break;
-	case CEnemy_Boss::ROUTINE_BEAM:
-		CAnimBillboard::Create(800.0f, 800.0f, 34, 5, 170, 60, false, GetPos() + m_apModel[0]->GetPos(), "data\\TEXTURE\\beams_00000.jpg");
-		m_pMotion->SetType(MOTION_NONE);
-		m_Routine = ROUTINE_WAIT;
-		break;
-	case CEnemy_Boss::ROUTINE_MAX:
+		if (m_nCoolTime <= 0)
+		{
+			m_pMotion->SetType(MOTION_ROTATION);
+		}
 		break;
 	default:
+		m_pMotion->SetType(MOTION_ROTATION);
+		m_bMotionLock = false;
 		break;
 	}
+	
 	m_pMotion->Update();
 	m_nRoutineCount--;
 
@@ -799,31 +856,20 @@ void CEnemy_Boss::Update()
 
 	D3DXVECTOR3 move = GetMove();
 		move.y -= GRAVITY ;
-		SetPos(GetPos() + GetMove());
-		if (pMesh != NULL)
-		{
-		if (pMesh->Collision(GetPosAddress()))
-		{
-			move.y = 0.0f;
-			if (m_nRoutineCount <= 0)
-			{
-				m_bTrigger = true;;
-				if (m_pAttackCollision != NULL)
-				{
-					delete m_pAttackCollision;
-					m_pAttackCollision = NULL;
-				}
-				m_nRoutineCount = 0;
-			
-					m_Routine = (ROUTINE)(rand() % ROUTINE_MAX);
-					m_nRoutineCount = 120;
-				
-			
-			}
-		}
-
 		SetMove(move);
-	}
+		SetPos(GetPos() + GetMove());
+		if (GetPos().y <= 0.0f)
+		{
+			D3DXVECTOR3 pos = GetPos();
+			pos.y = 0.0f;
+			move.y = 0.0f;
+			SetPos(pos);
+			m_bLand = true;
+
+
+		
+
+		}
 	CEnemy::Update();
 }
 
@@ -847,17 +893,30 @@ bool CEnemy_Boss::Damage(int nDamage, D3DXVECTOR3 knockback)
 }
 void  CEnemy_Boss::Attack()
 {
+	m_bMotionLock = true;
 	m_pMotion->SetType(MOTION_ATTACK);
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	D3DXVECTOR3 vec = (pPlayer->GetPos() - GetPos());
-	m_rotDest.y = atan2f(-vec.x, -vec.z);
-	SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
-	if (m_pMotion->GetKey() == 2)
+	if (m_pAttackCollision == NULL)
+	{
+		D3DXVECTOR3 animRot = m_rotDest - GetRot();
+		if (animRot.y < -D3DX_PI)
+		{
+			animRot.y += D3DX_PI * 2;
+		}
+		else if (animRot.y > D3DX_PI)
+		{
+			animRot.y += -D3DX_PI * 2;
+		}
+		SetRot(GetRot() + animRot * 0.05f);
+	}
+
+	if (m_pMotion->GetKey() == 3)
 	{
 	
 		if (m_pAttackCollision == NULL)
 		{
-			m_pAttackCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMYATTACK, 60.0f, 7, D3DXVECTOR3(0.0f, -50.0f, 0.0f), VECTO3ZERO, m_apModel[6]->GetMatrixAddress(), this);
+			m_pAttackCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMYATTACK, 120.0f, 7, D3DXVECTOR3(0.0f, -50.0f, 0.0f), VECTO3ZERO, m_apModel[6]->GetMatrixAddress(), this);
 		}
 
 	}
@@ -890,9 +949,22 @@ void  CEnemy_Boss::Charge()
 		D3DXVec3Normalize(&vec, &vec);
 		m_bTrigger = false;
 		m_vec = vec;
+		if (m_pAttackCollision == NULL)
+		{
+			m_pAttackCollision = CSphereCollision::Create(CSphereCollision::TYPE_ENEMYATTACK, 150.0f, 20, D3DXVECTOR3(0.0f, 0.0f, -50.0f), VECTO3ZERO, m_apModel[0]->GetMatrixAddress(), this);
+		}
 	}
 	m_rotDest.y = atan2f(-m_vec.x, -m_vec.z);
-	SetRot(GetRot() + (m_rotDest - GetRot()) * 0.05f);
+	D3DXVECTOR3 animRot = m_rotDest - GetRot();
+	if (animRot.y < -D3DX_PI)
+	{
+		animRot.y += D3DX_PI * 2;
+	}
+	else if (animRot.y > D3DX_PI)
+	{
+		animRot.y += -D3DX_PI * 2;
+	}
+	SetRot(GetRot() + animRot * 0.05f);
 	D3DXVECTOR3 move = GetMove();
 
 
@@ -901,25 +973,35 @@ void  CEnemy_Boss::Charge()
 		move.z += m_vec.z * 1.5f;
 		for (int i = 0; i < 13; i++)
 		{
-			CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(1.0f, 0.5f, 0.5f, 0.5f), 30);
+			//CAfterImageObject::Create((char *)m_apModel[i]->GetName().c_str(), m_apModel[i]->GetMatrix(), D3DXCOLOR(1.0f, 0.5f, 0.5f, 0.5f), 30);
 		}
 
 	SetMove(move);
 }
 void  CEnemy_Boss::Jump()
 {
+	m_bMotionLock = true;
 	m_pMotion->SetType(MOTION_JUMP);
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	D3DXVECTOR3 vec = (pPlayer->GetPos() - GetPos());
 	vec.y = 0.0f;
 	D3DXVec3Normalize(&vec, &vec);
 	m_rotDest.y = atan2f(-vec.x, -vec.z);
-	SetRot(GetRot() + (m_rotDest - GetRot()) * 0.15f);
-	if (m_pMotion->GetKey() == 2 && m_bTrigger)
+	D3DXVECTOR3 animRot = m_rotDest - GetRot();
+	if (animRot.y < -D3DX_PI)
+	{
+		animRot.y += D3DX_PI * 2;
+	}
+	else if (animRot.y > D3DX_PI)
+	{
+		animRot.y += -D3DX_PI * 2;
+	}
+	SetRot(GetRot() + animRot * 0.05f);
+	if (m_pMotion->GetKey() == 2 && m_bTrigger && m_bLand)
 	{
 		D3DXVECTOR3 move = GetMove();
 	
-		move.y += 70.0f;
+		move.y += 20.0f;
 		if (m_Routine == ROUTINE_FALLDOWN)
 		{
 			move.x += vec.x * 10.f;
@@ -927,8 +1009,8 @@ void  CEnemy_Boss::Jump()
 		}
 		else
 		{
-			move.x += vec.x * -10.f;
-			move.z += vec.z * -10.f;
+			move.x += vec.x * -50.f;
+			move.z += vec.z * -50.f;
 		}
 		SetMove(move);
 		m_bTrigger = false;

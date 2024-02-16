@@ -11,6 +11,7 @@
 
 #include "motion.h"
 #include "orbit.h"
+#include "lifegage.h"
 #include "collision.h"
 #include "light.h"
 
@@ -193,7 +194,11 @@ public:
 private:
 	ROUTINE m_Routine;
 	int m_nRoutineCount;
+	int m_nCoolTime;
+	bool m_bMotionLock;
+	bool m_bLand;
 	bool m_bTrigger;
+	CGage * m_pGage;
 	D3DXVECTOR3 m_vec;
 	CSphereCollision * m_pAttackCollision;
 

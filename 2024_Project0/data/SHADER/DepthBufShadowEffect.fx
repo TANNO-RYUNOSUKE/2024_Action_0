@@ -14,8 +14,8 @@ float  m_Far = 5000.0f;             //フォグの終了位置
 float m_fHigh = 500.0f;
 float m_fLow = 0.0f;
 float m_dot;
-float4 m_FogColor = float4(0.1f, 0.1f, 0.2f, 1.0f);
-float4 m_FogColor2 = float4(0.3f, 0.3f, 0.4f, 1.0f);
+float4 m_FogColor = float4(0.5f, 0.5f, 0.5f, 1.0f);
+float4 m_FogColor2 = float4(0.4f, 0.4f, 0.34f, 1.0f);
 
 sampler DefSampler = sampler_state	// サンプラーステート
 {
@@ -63,7 +63,7 @@ VS_OUTPUT DepthBufShadow_VS( float4 Pos : POSITION , float3 Norm : NORMAL, float
    float3 N = normalize(Norm.xyz);*/
 
    Out.Col = max(m_Ambient, (dot(N, -LightDirect)*0.5f));
-   Out.Col = float4(1.0f, 1.0f, 1.0f, 0.6) * (0.4 + dot(N, -LightDirect)*(1-0.4f));
+   Out.Col = float4(0.9f, 0.9f, 0.9f, 0.6) * (0.4 + dot(N, -LightDirect)*(1-0.4f));
    Out.Col.a = 1.0f;
    Out.PosWVP = mul(Pos, matWorld);
 
@@ -86,10 +86,7 @@ float4 DepthBufShadow_PS( float4 Col : COLOR, float4 ZCalcTex : TEXCOORD1 , VS_O
 	{
 	Col = (In.Col * tex2D(tex0, In.Tex));
 	}
-	Col.b *= 1.2;
-
-	Col.r *= 0.95;
-
+	
    // テクスチャ座標に変換
    float2 TransTexCoord;
    TransTexCoord.x = (1.0f + ZCalcTex.x/ZCalcTex.w)*0.5f;
@@ -97,12 +94,10 @@ float4 DepthBufShadow_PS( float4 Col : COLOR, float4 ZCalcTex : TEXCOORD1 , VS_O
 
    if (TransTexCoord.x >1.0f || TransTexCoord.x < 0.0f || TransTexCoord.y >1.0f || TransTexCoord.y < 0.0f )
    {
-
-	   Col.rgb = Col.rgb * 0.25f;
-	  
-
+	   Col.rgb = Col.rgb * 0.7f;
 	   Col = Col * f + m_FogColor * (1.0f - f);
 	   Col = Col * (f + h) + m_FogColor2 * (1.0f - (f + h));
+	 
 	   return Col;
    }
    float3 VtxVec = In.PosWVP.xyz - m_LightPos;
@@ -119,9 +114,9 @@ float4 DepthBufShadow_PS( float4 Col : COLOR, float4 ZCalcTex : TEXCOORD1 , VS_O
    // 同じ座標のZ値を抽出
    float SM_Z = (TexCol.x + (TexCol.y +(TexCol.z /256.0f)/256.0f) /256.0f);
   // color.r + (color.g + (color.b + color.a / 256.0f) / 256.0f) / 256.0f;
-   // 算出点がシャドウマップのZ値よりも大きければ影と判断
-   if( ZValue > SM_Z+0.00005f || angle < 0.925f){
-     Col.rgb = Col.rgb * 0.25f;
+   // 算出点がシャドウマップのZ値よりも大きければ影と判断|| angle < 0.925f
+   if( ZValue > SM_Z+0.00005f ){
+     Col.rgb = Col.rgb * 0.7f;
 	
     }
 

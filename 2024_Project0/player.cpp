@@ -13,7 +13,7 @@
 
 #include "debugproc.h"
 #include "camera.h"
-
+#include "lifegage.h"
 #include "camera.h"
 
 #include <stdio.h>
@@ -90,6 +90,7 @@ HRESULT CPlayer::Init()
 	m_attackpos = VECTO3ZERO;
 	m_pRank = CObject2D::Create(D3DXVECTOR3(1000.0f, 200.0f, 0.0f), 125.0f, 125.0f, 6, "data\\TEXTURE\\rank.png");
 	m_pScoreGage = CObject2D::Create(D3DXVECTOR3(950.0f, 270.0f, 0.0f), 10.0f, 125.0f,6,NULL,D3DXVECTOR2(0.0f,0.5f));
+	pGage = CGage::Create(D3DXVECTOR3(65.0f, 65.0f, 0.0f), 377.0f, PLAYERLIFE_MAX);
 
 	m_pRank->SetDisp(false);
 	for (int i = 0; i < 9; i++)
@@ -143,7 +144,7 @@ void CPlayer::Uninit()
 void CPlayer::Update()
 {
 	m_attackpos = D3DXVECTOR3{ 0.0f,0.0f,-40.0f };
-
+	pGage->SetData(GetLife());
 	D3DXVec3TransformCoord(&m_attackpos, &m_attackpos, &m_mtx);
 	m_posOld = GetPos();
 	CInputKeyboard * pInputKeyboard = CManager::GetInstance()->GetInputKeyboard();
@@ -199,18 +200,19 @@ void CPlayer::Update()
 		animRot.y += -D3DX_PI * 2;
 	}
 	SetRot(GetRot() + animRot /6);
-	CMeshfield * pMesh = CManager::GetInstance()->GetScene()->GetMeshfield();
-	if (pMesh != NULL)
-	{
-		D3DXVECTOR3 move = GetMove();
+
+		move = GetMove();
 		move.y -= GRAVITY;
 		m_nLand--;
-		if (pMesh->Collision(GetPosAddress()))
+		if (GetPos().y <= 0.0f)
 		{
-			
-				move.y = 0.0f;
-				m_bLand = true;
-				m_nLand = 3;
+			D3DXVECTOR3 pos = GetPos();
+			pos.y = 0.0f;
+			move.y = 0.0f;
+			SetPos(pos);
+			move.y = 0.0f;
+			m_bLand = true;
+			m_nLand = 3;
 		}
 		else
 		{
@@ -218,23 +220,23 @@ void CPlayer::Update()
 			m_bLand = false;
 		}
 		SetMove(move);
-	}
+	
 	D3DXVECTOR3 pos = GetPos();
-	if (pos.x > 2000.0f)
+	if (pos.x > 1200.0f)
 	{
-		pos.x = 2000.0f;
+		pos.x = 1200.0f;
 	}
-	else if (pos.x < -3000.0f)
+	else if (pos.x < -800.0f)
 	{
-		pos.x = -3000.0f;
+		pos.x = -800.0f;
 	}
-	if (pos.z > 450.0f)
+	if (pos.z > 16000.0f)
 	{
-		pos.z = 450.0f;
+		pos.z = 16000.0f;
 	}
-	else if (pos.z < -1000.0f)
+	else if (pos.z < -5500.0f)
 	{
-		pos.z = -1000.0f;
+		pos.z = -5500.0f;
 	}
 	SetPos(pos);
 }

@@ -21,7 +21,7 @@ public:
 	void Draw(void);
 
 	static CGage * Create(D3DXVECTOR3 pos, float fWidth,int nMax);
-
+	void SetData(int data) { m_ndata = data; }
 private:
 
 	CObject2D * m_pGage;

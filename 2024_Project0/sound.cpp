@@ -27,6 +27,10 @@ SOUNDINFO g_aSoundInfo[CSound::SOUND_LABEL_MAX] =
 	{"data/BGM/Meteorite.wav", -1},		// BGM0
 	{"data/BGM/battle3.wav", -1},		// BGM1
 	{ "data/BGM/ZONE.wav", -1 },		// BGM2
+	{ "data/BGM/sanctuary.wav", -1 },		// BGM2
+	{ "data/BGM/aet.wav", -1 },		// BGM2
+	{ "data/BGM/MagicalWorld.wav", -1 },		// BGM2
+	{ "data/BGM/ERRATICPULSE.wav", -1 },		// BGM2
 	{"data/SE/shot.wav", 0},			// 弾発射音
 	{"data/SE/explosion.wav", 0},	// 爆発音
 	{ "data/SE/missile.wav", 0 },	
@@ -38,6 +42,7 @@ SOUNDINFO g_aSoundInfo[CSound::SOUND_LABEL_MAX] =
 	{ "data/SE/Cyber05-6.wav", 0 },
 	{ "data/SE/ブースタージャンプ1.wav", 0 },
 	{ "data/SE/Shock2.wav", 0 },
+	{ "data/SE/beam.wav", 0 },
 };
 //SOUND_LABEL_BGM000 = 0,		// BGM0
 //SOUND_LABEL_BGM001,			// BGM1

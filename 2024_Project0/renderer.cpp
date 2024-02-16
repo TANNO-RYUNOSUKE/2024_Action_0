@@ -161,7 +161,7 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 	m_pDepthShadow->SetShadowMap(&m_pZTexture);	// シャドウマップテクスチャを登録
 	D3DXMatrixPerspectiveFovLH(&CameraProj, D3DXToRadian(45), 1.777f, 10.0f, 50000.0f);
 	D3DXMatrixPerspectiveFovLH(&LightProj, D3DXToRadian(45), 1.0f, 30.0f, 50000.0f);
-	D3DXMatrixLookAtLH(&LightView, &D3DXVECTOR3(00.0f, 500.0f, 000.0f), &D3DXVECTOR3(10.0f, -10.0f, 00.0f), &D3DXVECTOR3(0, 1, 0));
+	D3DXMatrixLookAtLH(&LightView, &D3DXVECTOR3(3000.0f, 3000.0f, 000.0f), &D3DXVECTOR3(10.0f, -10.0f, 00.0f), &D3DXVECTOR3(0, 1, 0));
 
 	// Z値テクスチャOBJへ登録
 	m_pZTex->SetViewMatrix(&LightView);
@@ -216,8 +216,10 @@ void CRenderer::Update(void)
 	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
 	if (pPlayer != NULL)
 	{
-		 Vdest = (D3DXVECTOR3(0.0f, 750.0f, 0.0f) + pPlayer->GetPos());
-		 Rdest = (D3DXVECTOR3(10.0f, -10.0f, 0.0f) + pPlayer->GetPos());
+		 Vdest = (D3DXVECTOR3(2000.0f, 2000.0f, 0.0f) );
+		 Rdest = (D3DXVECTOR3(10.0f, -10.0f, 0.0f) );
+		 Vdest.z += pPlayer->GetPos().z;
+		 Rdest.z += pPlayer->GetPos().z;
 		 V = (V + (Vdest - V)* 0.01f);
 		 R = (R + (Rdest - R)* 0.1f);
 		D3DXMatrixLookAtLH(&LightView, &V, &R, &D3DXVECTOR3(0, 1, 0));

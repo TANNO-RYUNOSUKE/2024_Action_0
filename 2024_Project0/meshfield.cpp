@@ -75,8 +75,8 @@ HRESULT CMeshfield::Init(void)
 			pVtx[(nV + (nU * m_nSplit_V))].pos = D3DXVECTOR3((-m_fWidth * (m_nSplit_V - 1) / 2) + m_fWidth * nV, 0.0f, (m_fHeight * (m_nSplit_U - 1) / 2) + -m_fHeight * nU) + GetPos();
 			pVtx[(nV + (nU * m_nSplit_V))].tex = -D3DXVECTOR2
 			(
-				nU * (float)(m_nSplit_U) *0.005f,
-				nV * (float)(m_nSplit_V) *0.005f
+				nU * (float)(m_nSplit_U) *0.05f,
+				nV * (float)(m_nSplit_V) *0.05f
 			);
 		}
 	}

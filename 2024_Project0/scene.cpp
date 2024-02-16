@@ -97,7 +97,7 @@ HRESULT CTitle::Init()
 	CObject2D::Create(D3DXVECTOR3(SCREEN_WIDTH /2, SCREEN_HEIGHT/2, 0.0f),SCREEN_HEIGHT,SCREEN_WIDTH,0, "data\\TEXTURE\\TITLE\\ss.png");
 	
 	CSound * pSound = CManager::GetInstance()->GetSound();
-	//pSound->Play(CSound::SOUND_LABEL_BGM001);
+	pSound->Play(CSound::SOUND_LABEL_BGM_SANCTUARY);
 	return S_OK;
 }
 //=============================================
@@ -198,12 +198,14 @@ HRESULT CGame::Init()
 {
 	b_Pause = false;
 	m_nCnt = 0;
+	m_nEnemy = 0;
 	m_pFade = DBG_NEW CFade;
 	m_pFade->Init();
 	m_pCamera = DBG_NEW CCamera;
 	m_pLight = DBG_NEW CLight;
-	m_pMeshfield = CMeshfield::Create(100.0f, 100.0f, 70, 70);
+	m_pMeshfield = CMeshfield::Create(1000.0f, 1000.0f, 70, 70);
 	m_pPlayer = CPlayer::Create();
+	m_pPlayer->SetPos(D3DXVECTOR3(0.0f, 0.0f, -5000.0f));
 	m_nEnemyCount = 0;
 	CTexture * pTex = CManager::GetInstance()->GetTexture();
 	//‰Šú‰»Ý’è;
@@ -219,17 +221,17 @@ HRESULT CGame::Init()
 	CObjectX * pSky = CObjectX::Create("data\\MODEL\\sky.x", VECTO3ZERO, VECTO3ZERO,0);
 	pSky->SetLight(false);
 	pSky->m_bShadow = false;
-	CObjectX::Create("data\\MODEL\\city.x", D3DXVECTOR3(0.0f,-100.0f,0.0f), VECTO3ZERO, 0);
+	CObjectX::Create("data\\MODEL\\city2.x", D3DXVECTOR3(0.0f,-50.0f,0.0f), VECTO3ZERO, 0);
 	pTex->Regist("data\\TEXTURE\\spelhit.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect.png");
 	pTex->Regist("data\\TEXTURE\\HitEffect2.png");
+	pTex->Regist("data\\TEXTURE\\beams_00000.jpg");
+	m_nWaveCount = 0;
+	
 
-	CEnemy_army::Create(D3DXVECTOR3(0.0f,0.0f,500.0f), 150);
-	CEnemy_Boss::Create(D3DXVECTOR3(0.0f, 0.0f, -1500.0f), 150);
 
 	CSound * pSound = CManager::GetInstance()->GetSound();
-	pSound->Play(CSound::SOUND_LABEL_BGM_ZONE);
-	CGage::Create(D3DXVECTOR3(65.0f, 65.0f, 0.0f), 377.0f, PLAYERLIFE_MAX);
+	pSound->Play(CSound::SOUND_LABEL_BGM_CITY);
 
 	CObject2D::Create(D3DXVECTOR3(250.0f, 60.0f, 0.0f), 59.0f, 413.0f, 6, "data\\TEXTURE\\life.png");
 
@@ -266,17 +268,35 @@ void CGame::Uninit()
 void CGame::Update()
 {
 	CDebugProc * pDeb = CManager::GetInstance()->GetDeb();
+	m_pPlayer->GetPos().z;
+	if (m_nWaveCount <= 3)
+	{
+		if (m_pPlayer->GetPos().z > -5000.0f + (m_nWaveCount + 1) * 1500.0f)
+		{
+			m_nWaveCount++;
+			if (m_nWaveCount > 3)
+			{
+				CSound * pSound = CManager::GetInstance()->GetSound();
+				CEnemy_Boss::Create(D3DXVECTOR3(0.0f, 1000.0f, 1500.0f + m_pPlayer->GetPos().z), 600);
+				pSound->Stop();
+				pSound->Play(CSound::SOUND_LABEL_BGM_BOSS);
+			}
+			else
+			{
+				for (int i = 0; i < m_nWaveCount + 1; i++)
+				{
+					D3DXVECTOR3 pos = D3DXVECTOR3((rand() % 10000 - 5000) * 0.1f, 0.0f, (rand() % 5000) * 0.1f) + m_pPlayer->GetPos();
+					CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
+					CEnemy_army::Create(pos, 100);
+				}
+			}
+
+		}
+	}
 	if (!CManager::GetInstance()->GetPause())
 	{
 		m_nCnt++;
-		if (m_nCnt % (5 * 60) == 0 && m_nEnemyCount < 6)
-		{
-			D3DXVECTOR3 pos = D3DXVECTOR3((rand() % 10000 -5000) * 0.1f, 0.0f, (rand() % 10000 - 5000) * 0.1f);
-			CEnemy_army::Create(pos, 200);
-			CAnimBillboard::Create(200.0f, 200.0f, 6, 6, 36, 24, false, pos, "data\\TEXTURE\\spelhit.png");
-			CManager::GetInstance()->GetSound()->Play(CSound::SOUND_LABEL_SE_EXPLOSION);
-			m_nEnemyCount++;
-		}
+		
 		if (m_nCnt % 10 == 0 && m_pPlayer != NULL)
 		{
 			D3DXVECTOR3 pos = D3DXVECTOR3((rand() % 10000 - 5000) * 0.1f, (rand() %  5000) * 0.1f, (rand() % 10000 - 5000) * 0.1f) + m_pPlayer->GetPos();
@@ -316,12 +336,27 @@ void CGame::Update()
 		}
 	
 	}
-	if (m_nEnemyCount >= 3 && CEnemy::EnemyList.GetNum() == 0)
+	CSound * pSound = CManager::GetInstance()->GetSound();
+	if (m_nWaveCount <= 3)
+	{
+		if (CEnemy::EnemyList.GetNum() == 0 && m_nEnemy != 0)
+		{
+			pSound->Stop(CSound::SOUND_LABEL_BGM_BATTLE);
+			pSound->Play(CSound::SOUND_LABEL_BGM_CITY);
+		}
+		else if (CEnemy::EnemyList.GetNum() != 0 && m_nEnemy == 0)
+		{
+			pSound->Stop(CSound::SOUND_LABEL_BGM_CITY);
+			pSound->Play(CSound::SOUND_LABEL_BGM_BATTLE);
+		}
+	}
+	
+	m_nEnemy = CEnemy::EnemyList.GetNum();
+	if (m_nWaveCount > 3 && CEnemy::EnemyList.GetNum() == 0)
 	{
 		m_pFade->FadeOut(MODE::MODE_RESULT);
 	}
-	
-	if (pInputKeyboard->GetTrigger(DIK_RETURN))
+	if (m_pPlayer->GetLife() <= 0)
 	{
 		m_pFade->FadeOut(MODE::MODE_RESULT);
 	}

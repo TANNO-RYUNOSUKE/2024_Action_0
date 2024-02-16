@@ -61,6 +61,9 @@ HRESULT CBullet::Init()
 		m_pOrbit2 = COrbit::Create(60, D3DXCOLOR(0.7f, 1.0f, 0.3f, 1.0f), D3DXVECTOR3(0.0f, 1.0f, 0.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), GetMatrixAddress());
 		break;
 	case CBullet::TYPE_ENEMY:
+		m_pColl = CSphereCollision::Create(CSphereCollision::TYPE_ENEMYATTACK, 10.0f, 5, VECTO3ZERO, VECTO3ZERO, GetMatrixAddress(), this);
+		m_pOrbit = COrbit::Create(60, D3DXCOLOR(0.7f, 0.3f, 0.7f, 1.0f), D3DXVECTOR3(10.0f, 0.0f, 0.0f), D3DXVECTOR3(-1.0f, 0.0f, 0.0f), GetMatrixAddress());
+		m_pOrbit2 = COrbit::Create(60, D3DXCOLOR(0.7f, 0.3f, 0.7f, 1.0f), D3DXVECTOR3(0.0f, 10.0f, 0.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), GetMatrixAddress());
 		break;
 	case CBullet::TYPE_MAX:
 		break;

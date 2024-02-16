@@ -76,22 +76,16 @@ void CGage::Uninit(void)
 //=============================================
 void CGage::Update(void)
 {
-	CPlayer * pPlayer = CManager::GetInstance()->GetScene()->GetPlayer();
+	
 	m_pGage->SetTexMax(D3DXVECTOR2(m_pGage->GetTexMax().x - 0.01f, m_pGage->GetTexMax().y));
 	m_pGage->SetTexMin(D3DXVECTOR2(m_pGage->GetTexMin().x - 0.01f, m_pGage->GetTexMin().y));
-	if (pPlayer != NULL)
-	{
-		m_ndata = pPlayer->GetLife();
+	
 		
-		m_pGage->SetWidth(m_pGage->GetWidth() + (((m_fWidth/(float)m_nMax)* pPlayer->GetLife()) - m_pGage->GetWidth()) * 0.3f);
-		m_pGageRed->SetWidth(m_pGageRed->GetWidth() + (((m_fWidth / (float)m_nMax)* pPlayer->GetLife()) - m_pGageRed->GetWidth()) * 0.05f);
-	}
-	else
-	{
-		m_ndata = 0;
-		m_pGage->SetWidth(m_pGage->GetWidth() - m_pGage->GetWidth() * 0.3f);
-		m_pGageRed->SetWidth(m_pGageRed->GetWidth() - m_pGageRed->GetWidth() * 0.05f);
-	}
+		
+		m_pGage->SetWidth(m_pGage->GetWidth() + (((m_fWidth/(float)m_nMax)* m_ndata) - m_pGage->GetWidth()) * 0.3f);
+		m_pGageRed->SetWidth(m_pGageRed->GetWidth() + (((m_fWidth / (float)m_nMax)* m_ndata) - m_pGageRed->GetWidth()) * 0.05f);
+	
+	
 
 }
 

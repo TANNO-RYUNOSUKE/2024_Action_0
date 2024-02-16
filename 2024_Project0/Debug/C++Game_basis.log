@@ -1,2 +1,12 @@
-﻿  C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\Debug\C++Game_basis.exe
+﻿  player.cpp
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\player.cpp(322): warning C4244: '=': 'float' から 'int' への変換です。データが失われる可能性があります。
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\player.cpp(1252): warning C4244: '+=': 'float' から 'int' への変換です。データが失われる可能性があります。
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\player.cpp(1265): warning C4244: '*=': 'float' から 'int' への変換です。データが失われる可能性があります。
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\player.cpp(1272): warning C4244: '初期化中': 'int' から 'float' への変換です。データが失われる可能性があります。
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\player.cpp(1274): warning C4244: '+=': 'float' から 'int' への変換です。データが失われる可能性があります。
+  enemy.cpp
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\enemy.cpp(232): warning C4244: '=': 'float' から 'int' への変換です。データが失われる可能性があります。
+c:\users\student\desktop\2024_action_git\2024_action_0\2024_project0\enemy.cpp(236): warning C4244: '-=': 'float' から 'int' への変換です。データが失われる可能性があります。
+  コードを生成中...
+  C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\Debug\C++Game_basis.exe
   C++Game_basis.vcxproj -> C:\Users\student\Desktop\2024_Action_Git\2024_Action_0\2024_Project0\Debug\C++Game_basis.pdb (Partial PDB)
